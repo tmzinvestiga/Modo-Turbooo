@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Task } from '@/types/Task';
 import { Calendar, Clock, RotateCcw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { format, isOverdue } from 'date-fns';
+import { format, isPast } from 'date-fns';
 
 interface TaskCardProps {
   task: Task;
@@ -14,7 +13,7 @@ interface TaskCardProps {
 }
 
 export const TaskCard = ({ task, onUpdateTask, onDeleteTask }: TaskCardProps) => {
-  const isTaskOverdue = isOverdue(task.dueDate) && task.status !== 'done';
+  const isTaskOverdue = isPast(task.dueDate) && task.status !== 'done';
   
   const getRecurrenceIcon = () => {
     switch (task.recurrence) {
