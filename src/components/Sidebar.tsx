@@ -25,11 +25,8 @@ export const Sidebar = () => {
   return (
     <SidebarUI className="border-r border-gray-700 bg-gray-900">
       <SidebarHeader className="p-6">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">MT</span>
-          </div>
-          <h1 className="text-xl font-bold text-white">Modo Turbo</h1>
+        <div className="flex items-center">
+          <h1 className="text-xl font-bold text-blue-900">Modo Turbo</h1>
         </div>
       </SidebarHeader>
       
@@ -39,12 +36,12 @@ export const Sidebar = () => {
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton
                 asChild
-                className={`w-full text-gray-300 hover:text-white hover:bg-gray-700 ${
+                className={`w-full text-blue-900 hover:text-blue-800 hover:bg-gray-700 ${
                   location.pathname === item.url ? 'bg-blue-600 text-white' : ''
                 }`}
               >
                 <Link to={item.url} className="flex items-center gap-3 px-3 py-2">
-                  <item.icon className="w-5 h-5" />
+                  <item.icon className="w-5 h-5 text-gray-800" />
                   <span>{item.title}</span>
                 </Link>
               </SidebarMenuButton>
@@ -56,8 +53,8 @@ export const Sidebar = () => {
       <SidebarFooter className="p-4">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton className="w-full text-gray-300 hover:text-white hover:bg-gray-700">
-              <LogOut className="w-5 h-5" />
+            <SidebarMenuButton className="w-full text-blue-900 hover:text-blue-800 hover:bg-gray-700">
+              <LogOut className="w-5 h-5 text-gray-800" />
               <span>Logout</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
