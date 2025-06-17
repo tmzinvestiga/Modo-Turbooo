@@ -23,6 +23,7 @@ export const useTaskStore = () => {
         ...task,
         dueDate: new Date(task.dueDate),
         completedAt: task.completedAt ? new Date(task.completedAt) : undefined,
+        createdAt: task.createdAt ? new Date(task.createdAt) : new Date(),
       }));
       setTasks(parsedTasks);
     }
@@ -42,10 +43,11 @@ export const useTaskStore = () => {
     localStorage.setItem(STATS_KEY, JSON.stringify(newStats));
   };
 
-  const addTask = (task: Omit<Task, 'id'>) => {
+  const addTask = (task: Omit<Task, 'id' | 'createdAt'>) => {
     const newTask: Task = {
       ...task,
       id: Date.now().toString(),
+      createdAt: new Date(),
     };
     saveTasks([...tasks, newTask]);
   };

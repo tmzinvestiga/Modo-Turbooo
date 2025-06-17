@@ -6,6 +6,7 @@ export interface Task {
   recurrence: 'once' | 'daily' | 'weekly';
   status: 'todo' | 'doing' | 'done';
   completedAt?: Date;
+  createdAt: Date;
   points: number;
 }
 
