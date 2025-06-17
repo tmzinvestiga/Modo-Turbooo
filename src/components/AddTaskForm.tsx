@@ -11,7 +11,7 @@ import { CalendarIcon } from 'lucide-react';
 
 interface AddTaskFormProps {
   initialStatus: 'todo' | 'doing' | 'done';
-  onAddTask: (task: Omit<Task, 'id'>) => void;
+  onAddTask: (task: Omit<Task, 'id' | 'createdAt'>) => void;
   onCancel: () => void;
 }
 
