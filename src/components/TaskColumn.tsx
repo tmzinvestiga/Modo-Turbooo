@@ -12,7 +12,7 @@ interface TaskColumnProps {
   tasks: Task[];
   onUpdateTask: (taskId: string, updates: Partial<Task>) => void;
   onDeleteTask: (taskId: string) => void;
-  onAddTask: (task: Omit<Task, 'id'>) => void;
+  onAddTask: (task: Omit<Task, 'id' | 'createdAt'>) => void;
 }
 
 export const TaskColumn = ({ 
