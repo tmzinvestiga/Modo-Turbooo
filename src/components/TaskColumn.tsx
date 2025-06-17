@@ -24,6 +24,7 @@ export const TaskColumn = ({
   onAddTask 
 }: TaskColumnProps) => {
   const [showAddForm, setShowAddForm] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   
   const columnTasks = tasks.filter(task => task.status === status);
   
@@ -35,8 +36,36 @@ export const TaskColumn = ({
     }
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    const taskId = e.dataTransfer.getData('text/plain');
+    if (taskId) {
+      onUpdateTask(taskId, { status });
+    }
+  };
+
   return (
-    <div className={`bg-gray-800 rounded-lg border-t-4 ${getColumnColor()} min-h-[600px] flex flex-col`}>
+    <div 
+      className={`bg-gray-800 rounded-lg border-t-4 ${getColumnColor()} min-h-[600px] flex flex-col transition-all ${
+        isDragOver ? 'bg-gray-700 ring-2 ring-blue-500' : ''
+      }`}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       <div className="p-4 border-b border-gray-700">
         <div className="flex items-center justify-between">
           <h2 className="text-white font-semibold">{title}</h2>

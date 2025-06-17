@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Task } from '@/types/Task';
 import { Calendar, Clock, RotateCcw } from 'lucide-react';
@@ -29,8 +30,17 @@ export const TaskCard = ({ task, onUpdateTask, onDeleteTask }: TaskCardProps) =>
     return isTaskOverdue ? 'bg-red-600' : 'bg-gray-600';
   };
 
+  const handleDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.setData('text/plain', task.id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
   return (
-    <Card className="bg-gray-800 border-gray-700 hover:bg-gray-750 transition-colors cursor-grab active:cursor-grabbing">
+    <Card 
+      className="bg-gray-800 border-gray-700 hover:bg-gray-750 transition-colors cursor-grab active:cursor-grabbing"
+      draggable
+      onDragStart={handleDragStart}
+    >
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-2">
           <h3 className="text-white font-medium text-sm leading-tight">{task.title}</h3>
