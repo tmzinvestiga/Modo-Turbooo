@@ -3,91 +3,103 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Modern Design System with Beautiful Color Palette */
+/* Modern Design System - Inspired by Notion, Linear, Focalboard */
 
 @layer base {
   :root {
-    --background: 248 250 252; /* #F8FAFC - very light background */
-    --foreground: 30 41 59; /* #1E293B - dark gray/blue text */
+    --background: 251 251 251; /* #FBFBFB - Very light gray */
+    --foreground: 37 37 37; /* #252525 - Deep charcoal */
 
-    --card: 255 255 255; /* #FFFFFF - white cards */
-    --card-foreground: 30 41 59; /* #1E293B */
+    --card: 255 255 255; /* #FFFFFF - Pure white */
+    --card-foreground: 37 37 37; /* #252525 */
 
     --popover: 255 255 255; /* #FFFFFF */
-    --popover-foreground: 30 41 59; /* #1E293B */
+    --popover-foreground: 37 37 37; /* #252525 */
 
-    --primary: 105 70 235; /* #6946EB - purple accent */
+    --primary: 79 70 229; /* #4F46E5 - Modern indigo */
     --primary-foreground: 255 255 255; /* #FFFFFF */
 
-    --secondary: 241 245 249; /* #F1F5F9 - light gray */
-    --secondary-foreground: 30 41 59; /* #1E293B */
+    --secondary: 248 250 252; /* #F8FAFC - Light slate */
+    --secondary-foreground: 51 65 85; /* #334155 */
 
-    --muted: 241 245 249; /* #F1F5F9 */
-    --muted-foreground: 100 116 139; /* #64748B - soft gray */
+    --muted: 248 250 252; /* #F8FAFC */
+    --muted-foreground: 100 116 139; /* #64748B - Muted slate */
 
-    --accent: 105 70 235; /* #6946EB */
-    --accent-foreground: 255 255 255; /* #FFFFFF */
+    --accent: 238 242 255; /* #EEF2FF - Light indigo */
+    --accent-foreground: 79 70 229; /* #4F46E5 */
 
-    --destructive: 239 68 68; /* #EF4444 - error red */
+    --destructive: 220 38 38; /* #DC2626 - Clean red */
     --destructive-foreground: 255 255 255; /* #FFFFFF */
 
-    --border: 226 232 240; /* #E2E8F0 - light border */
-    --input: 226 232 240; /* #E2E8F0 */
-    --ring: 105 70 235; /* #6946EB */
+    --border: 228 228 231; /* #E4E4E7 - Subtle gray */
+    --input: 228 228 231; /* #E4E4E7 */
+    --ring: 79 70 229; /* #4F46E5 */
 
-    --radius: 12px;
+    --radius: 8px;
 
     --sidebar-background: 255 255 255; /* #FFFFFF */
-    --sidebar-foreground: 30 41 59; /* #1E293B */
-    --sidebar-primary: 105 70 235; /* #6946EB */
+    --sidebar-foreground: 37 37 37; /* #252525 */
+    --sidebar-primary: 79 70 229; /* #4F46E5 */
     --sidebar-primary-foreground: 255 255 255; /* #FFFFFF */
-    --sidebar-accent: 241 245 249; /* #F1F5F9 */
-    --sidebar-accent-foreground: 30 41 59; /* #1E293B */
-    --sidebar-border: 226 232 240; /* #E2E8F0 */
-    --sidebar-ring: 105 70 235; /* #6946EB */
+    --sidebar-accent: 248 250 252; /* #F8FAFC */
+    --sidebar-accent-foreground: 37 37 37; /* #252525 */
+    --sidebar-border: 228 228 231; /* #E4E4E7 */
+    --sidebar-ring: 79 70 229; /* #4F46E5 */
 
-    /* Additional colors for the app */
-    --success: 34 197 94; /* #22C55E */
-    --warning: 245 158 66; /* #F59E42 */
+    /* Modern productivity colors */
+    --success: 22 163 74; /* #16A34A - Clean green */
+    --warning: 245 158 11; /* #F59E0B - Warm amber */
+    --info: 59 130 246; /* #3B82F6 - Clear blue */
+    
+    /* Task status colors */
+    --status-todo: 148 163 184; /* #94A3B8 - Slate gray */
+    --status-doing: 245 158 11; /* #F59E0B - Amber */
+    --status-done: 22 163 74; /* #16A34A - Green */
+    
+    /* Priority colors */
+    --priority-low: 34 197 94; /* #22C55E - Soft green */
+    --priority-medium: 245 158 11; /* #F59E0B - Amber */
+    --priority-high: 239 68 68; /* #EF4444 - Red */
+    --priority-critical: 147 51 234; /* #9333EA - Purple */
   }
 
   .dark {
-    --background: 30 41 59; /* #1E293B */
-    --foreground: 248 250 252; /* #F8FAFC */
+    --background: 9 9 11; /* #09090B - Near black */
+    --foreground: 250 250 250; /* #FAFAFA - Off white */
 
-    --card: 51 65 85; /* #334155 */
-    --card-foreground: 248 250 252; /* #F8FAFC */
+    --card: 24 24 27; /* #18181B - Dark zinc */
+    --card-foreground: 250 250 250; /* #FAFAFA */
 
-    --popover: 51 65 85; /* #334155 */
-    --popover-foreground: 248 250 252; /* #F8FAFC */
+    --popover: 24 24 27; /* #18181B */
+    --popover-foreground: 250 250 250; /* #FAFAFA */
 
-    --primary: 105 70 235; /* #6946EB */
-    --primary-foreground: 255 255 255; /* #FFFFFF */
+    --primary: 99 102 241; /* #6366F1 - Lighter indigo for dark mode */
+    --primary-foreground: 24 24 27; /* #18181B */
 
-    --secondary: 51 65 85; /* #334155 */
-    --secondary-foreground: 248 250 252; /* #F8FAFC */
+    --secondary: 39 39 42; /* #27272A - Dark zinc */
+    --secondary-foreground: 250 250 250; /* #FAFAFA */
 
-    --muted: 51 65 85; /* #334155 */
-    --muted-foreground: 148 163 184; /* #94A3B8 */
+    --muted: 39 39 42; /* #27272A */
+    --muted-foreground: 161 161 170; /* #A1A1AA - Zinc gray */
 
-    --accent: 105 70 235; /* #6946EB */
-    --accent-foreground: 255 255 255; /* #FFFFFF */
+    --accent: 39 39 42; /* #27272A */
+    --accent-foreground: 250 250 250; /* #FAFAFA */
 
     --destructive: 239 68 68; /* #EF4444 */
-    --destructive-foreground: 255 255 255; /* #FFFFFF */
+    --destructive-foreground: 250 250 250; /* #FAFAFA */
 
-    --border: 51 65 85; /* #334155 */
-    --input: 51 65 85; /* #334155 */
-    --ring: 105 70 235; /* #6946EB */
+    --border: 39 39 42; /* #27272A */
+    --input: 39 39 42; /* #27272A */
+    --ring: 99 102 241; /* #6366F1 */
 
-    --sidebar-background: 30 41 59; /* #1E293B */
-    --sidebar-foreground: 248 250 252; /* #F8FAFC */
-    --sidebar-primary: 105 70 235; /* #6946EB */
-    --sidebar-primary-foreground: 255 255 255; /* #FFFFFF */
-    --sidebar-accent: 51 65 85; /* #334155 */
-    --sidebar-accent-foreground: 248 250 252; /* #F8FAFC */
-    --sidebar-border: 51 65 85; /* #334155 */
-    --sidebar-ring: 105 70 235; /* #6946EB */
+    --sidebar-background: 24 24 27; /* #18181B */
+    --sidebar-foreground: 250 250 250; /* #FAFAFA */
+    --sidebar-primary: 99 102 241; /* #6366F1 */
+    --sidebar-primary-foreground: 24 24 27; /* #18181B */
+    --sidebar-accent: 39 39 42; /* #27272A */
+    --sidebar-accent-foreground: 250 250 250; /* #FAFAFA */
+    --sidebar-border: 39 39 42; /* #27272A */
+    --sidebar-ring: 99 102 241; /* #6366F1 */
   }
 }
 
@@ -98,6 +110,7 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
@@ -105,7 +118,7 @@
 @keyframes fade-in {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -116,7 +129,7 @@
 @keyframes slide-up {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(16px);
   }
   to {
     opacity: 1;
@@ -127,7 +140,7 @@
 @keyframes scale-in {
   from {
     opacity: 0;
-    transform: scale(0.95);
+    transform: scale(0.96);
   }
   to {
     opacity: 1;
@@ -136,7 +149,7 @@
 }
 
 .animate-fade-in {
-  animation: fade-in 0.4s ease-out;
+  animation: fade-in 0.3s ease-out;
 }
 
 .animate-slide-up {
@@ -144,32 +157,81 @@
 }
 
 .animate-scale-in {
-  animation: scale-in 0.3s ease-out;
+  animation: scale-in 0.2s ease-out;
 }
 
-/* Custom component styles */
+/* Modern component styles */
 .glass-effect {
-  @apply bg-white/80 backdrop-blur-sm border border-white/20;
+  @apply bg-white/90 backdrop-blur-sm border border-white/20;
 }
 
 .card-hover {
-  @apply transition-all duration-200 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1;
+  @apply transition-all duration-200 hover:shadow-lg hover:shadow-black/5 hover:-translate-y-0.5;
 }
 
-.premium-gradient {
-  background: linear-gradient(135deg, #6946EB 0%, #8B5CF6 100%);
+.modern-gradient {
+  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
 }
 
 .success-gradient {
-  background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+  background: linear-gradient(135deg, #16A34A 0%, #15803D 100%);
 }
 
-/* Lock icon for premium features */
-.feature-locked {
-  @apply relative opacity-60;
+.status-gradient-todo {
+  background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
 }
 
-.feature-locked::after {
-  content: '🔒';
-  @apply absolute -top-1 -right-1 text-xs;
+.status-gradient-doing {
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+}
+
+.status-gradient-done {
+  background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+}
+
+/* Modern shadows */
+.shadow-soft {
+  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.04);
+}
+
+.shadow-medium {
+  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.08);
+}
+
+.shadow-strong {
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.12);
+}
+
+/* Calendar specific styles */
+.calendar-today {
+  @apply bg-primary text-primary-foreground font-medium;
+}
+
+.calendar-event {
+  @apply text-xs px-2 py-1 rounded-md truncate;
+}
+
+.calendar-event-todo {
+  @apply bg-slate-100 text-slate-700 border border-slate-200;
+}
+
+.calendar-event-doing {
+  @apply bg-amber-100 text-amber-800 border border-amber-200;
+}
+
+.calendar-event-done {
+  @apply bg-green-100 text-green-800 border border-green-200;
+}
+
+/* Board tabs */
+.board-tab {
+  @apply px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200;
+}
+
+.board-tab-active {
+  @apply bg-primary text-primary-foreground shadow-sm;
+}
+
+.board-tab-inactive {
+  @apply text-muted-foreground hover:text-foreground hover:bg-secondary;
 }

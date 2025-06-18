@@ -4,19 +4,40 @@ export interface Task {
   title: string;
   description?: string;
   status: 'todo' | 'doing' | 'done';
-  priority?: 'low' | 'medium' | 'high';
+  priority?: 'low' | 'medium' | 'high' | 'critical';
   points: number;
   dueDate: Date;
+  dueTime?: string; // HH:MM format
   completedAt?: Date;
   createdAt: Date;
   tags?: string[];
   labels?: string[];
+  boardId?: string; // For board association
+  
+  // Enhanced recurrence options
   recurrence?: 'none' | 'daily' | 'weekly' | 'monthly' | 'custom';
   recurrencePattern?: {
-    weekdays?: number[]; // For weekly: 0-6 (Sunday to Saturday)
-    customDates?: Date[]; // For custom recurrence
-    endDate?: Date; // When to stop recurring
+    // For weekly recurrence
+    weekdays?: number[]; // 0-6 (Sunday to Saturday)
+    
+    // For monthly recurrence
+    monthlyType?: 'date' | 'weekday'; // Repeat on specific date or weekday
+    monthlyDate?: number; // Day of month (1-31)
+    monthlyWeekday?: number; // Day of week (0-6)
+    monthlyWeek?: number; // Which week (1-4, or -1 for last)
+    
+    // For custom recurrence
+    customDates?: Date[];
+    interval?: number; // Every X days/weeks/months
+    
+    // Recurrence limits
+    endDate?: Date;
+    maxOccurrences?: number;
+    
+    // Time settings
+    resetTime?: string; // HH:MM when task should reset to todo
   };
+  
   isRecurring?: boolean;
   originalTaskId?: string; // For tracking recurring task instances
   userId?: string; // TODO: Add when backend is ready
@@ -29,6 +50,8 @@ export interface UserStats {
   currentStreak: number;
   weeklyGoal?: number;
   monthlyGoal?: number;
+  completionRate?: number;
+  averageTasksPerDay?: number;
 }
 
 // TODO: Add these interfaces when backend integration is ready
