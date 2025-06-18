@@ -3,87 +3,91 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
+/* Modern Design System with Beautiful Color Palette */
 
 @layer base {
   :root {
-    --background: 247 247 248; /* #f7f7f8 */
-    --foreground: 17 24 39; /* #111827 */
+    --background: 248 250 252; /* #F8FAFC - very light background */
+    --foreground: 30 41 59; /* #1E293B - dark gray/blue text */
 
-    --card: 247 247 248; /* #f7f7f8 */
-    --card-foreground: 17 24 39; /* #111827 */
+    --card: 255 255 255; /* #FFFFFF - white cards */
+    --card-foreground: 30 41 59; /* #1E293B */
 
-    --popover: 247 247 248; /* #f7f7f8 */
-    --popover-foreground: 17 24 39; /* #111827 */
+    --popover: 255 255 255; /* #FFFFFF */
+    --popover-foreground: 30 41 59; /* #1E293B */
 
-    --primary: 105 70 235; /* #6946eb */
-    --primary-foreground: 247 247 248; /* #f7f7f8 */
+    --primary: 105 70 235; /* #6946EB - purple accent */
+    --primary-foreground: 255 255 255; /* #FFFFFF */
 
-    --secondary: 30 39 54; /* #1e2736 */
-    --secondary-foreground: 247 247 248; /* #f7f7f8 */
+    --secondary: 241 245 249; /* #F1F5F9 - light gray */
+    --secondary-foreground: 30 41 59; /* #1E293B */
 
-    --muted: 30 39 54; /* #1e2736 */
-    --muted-foreground: 156 163 175; /* #9ca3af */
+    --muted: 241 245 249; /* #F1F5F9 */
+    --muted-foreground: 100 116 139; /* #64748B - soft gray */
 
-    --accent: 65 92 228; /* #415ce4 */
-    --accent-foreground: 247 247 248; /* #f7f7f8 */
+    --accent: 105 70 235; /* #6946EB */
+    --accent-foreground: 255 255 255; /* #FFFFFF */
 
-    --destructive: 239 68 68; /* #ef4444 */
-    --destructive-foreground: 247 247 248; /* #f7f7f8 */
+    --destructive: 239 68 68; /* #EF4444 - error red */
+    --destructive-foreground: 255 255 255; /* #FFFFFF */
 
-    --border: 30 39 54; /* #1e2736 */
-    --input: 30 39 54; /* #1e2736 */
-    --ring: 105 70 235; /* #6946eb */
+    --border: 226 232 240; /* #E2E8F0 - light border */
+    --input: 226 232 240; /* #E2E8F0 */
+    --ring: 105 70 235; /* #6946EB */
 
-    --radius: 0.5rem;
+    --radius: 12px;
 
-    --sidebar-background: 17 24 39; /* #111827 */
-    --sidebar-foreground: 247 247 248; /* #f7f7f8 */
-    --sidebar-primary: 105 70 235; /* #6946eb */
-    --sidebar-primary-foreground: 247 247 248; /* #f7f7f8 */
-    --sidebar-accent: 30 39 54; /* #1e2736 */
-    --sidebar-accent-foreground: 247 247 248; /* #f7f7f8 */
-    --sidebar-border: 30 39 54; /* #1e2736 */
-    --sidebar-ring: 105 70 235; /* #6946eb */
+    --sidebar-background: 255 255 255; /* #FFFFFF */
+    --sidebar-foreground: 30 41 59; /* #1E293B */
+    --sidebar-primary: 105 70 235; /* #6946EB */
+    --sidebar-primary-foreground: 255 255 255; /* #FFFFFF */
+    --sidebar-accent: 241 245 249; /* #F1F5F9 */
+    --sidebar-accent-foreground: 30 41 59; /* #1E293B */
+    --sidebar-border: 226 232 240; /* #E2E8F0 */
+    --sidebar-ring: 105 70 235; /* #6946EB */
+
+    /* Additional colors for the app */
+    --success: 34 197 94; /* #22C55E */
+    --warning: 245 158 66; /* #F59E42 */
   }
 
   .dark {
-    --background: 17 24 39; /* #111827 */
-    --foreground: 247 247 248; /* #f7f7f8 */
+    --background: 30 41 59; /* #1E293B */
+    --foreground: 248 250 252; /* #F8FAFC */
 
-    --card: 30 39 54; /* #1e2736 */
-    --card-foreground: 247 247 248; /* #f7f7f8 */
+    --card: 51 65 85; /* #334155 */
+    --card-foreground: 248 250 252; /* #F8FAFC */
 
-    --popover: 30 39 54; /* #1e2736 */
-    --popover-foreground: 247 247 248; /* #f7f7f8 */
+    --popover: 51 65 85; /* #334155 */
+    --popover-foreground: 248 250 252; /* #F8FAFC */
 
-    --primary: 105 70 235; /* #6946eb */
-    --primary-foreground: 247 247 248; /* #f7f7f8 */
+    --primary: 105 70 235; /* #6946EB */
+    --primary-foreground: 255 255 255; /* #FFFFFF */
 
-    --secondary: 30 39 54; /* #1e2736 */
-    --secondary-foreground: 247 247 248; /* #f7f7f8 */
+    --secondary: 51 65 85; /* #334155 */
+    --secondary-foreground: 248 250 252; /* #F8FAFC */
 
-    --muted: 30 39 54; /* #1e2736 */
-    --muted-foreground: 156 163 175; /* #9ca3af */
+    --muted: 51 65 85; /* #334155 */
+    --muted-foreground: 148 163 184; /* #94A3B8 */
 
-    --accent: 65 92 228; /* #415ce4 */
-    --accent-foreground: 247 247 248; /* #f7f7f8 */
+    --accent: 105 70 235; /* #6946EB */
+    --accent-foreground: 255 255 255; /* #FFFFFF */
 
-    --destructive: 239 68 68; /* #ef4444 */
-    --destructive-foreground: 247 247 248; /* #f7f7f8 */
+    --destructive: 239 68 68; /* #EF4444 */
+    --destructive-foreground: 255 255 255; /* #FFFFFF */
 
-    --border: 30 39 54; /* #1e2736 */
-    --input: 30 39 54; /* #1e2736 */
-    --ring: 105 70 235; /* #6946eb */
+    --border: 51 65 85; /* #334155 */
+    --input: 51 65 85; /* #334155 */
+    --ring: 105 70 235; /* #6946EB */
 
-    --sidebar-background: 17 24 39; /* #111827 */
-    --sidebar-foreground: 247 247 248; /* #f7f7f8 */
-    --sidebar-primary: 105 70 235; /* #6946eb */
-    --sidebar-primary-foreground: 247 247 248; /* #f7f7f8 */
-    --sidebar-accent: 30 39 54; /* #1e2736 */
-    --sidebar-accent-foreground: 247 247 248; /* #f7f7f8 */
-    --sidebar-border: 30 39 54; /* #1e2736 */
-    --sidebar-ring: 105 70 235; /* #6946eb */
+    --sidebar-background: 30 41 59; /* #1E293B */
+    --sidebar-foreground: 248 250 252; /* #F8FAFC */
+    --sidebar-primary: 105 70 235; /* #6946EB */
+    --sidebar-primary-foreground: 255 255 255; /* #FFFFFF */
+    --sidebar-accent: 51 65 85; /* #334155 */
+    --sidebar-accent-foreground: 248 250 252; /* #F8FAFC */
+    --sidebar-border: 51 65 85; /* #334155 */
+    --sidebar-ring: 105 70 235; /* #6946EB */
   }
 }
 
@@ -93,11 +97,11 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-sans antialiased;
   }
 }
 
-/* Custom animations for modern feel */
+/* Modern animations and effects */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -109,21 +113,63 @@
   }
 }
 
-@keyframes slide-in {
+@keyframes slide-up {
   from {
     opacity: 0;
-    transform: translateX(-10px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
 .animate-fade-in {
-  animation: fade-in 0.3s ease-out;
+  animation: fade-in 0.4s ease-out;
 }
 
-.animate-slide-in {
-  animation: slide-in 0.3s ease-out;
+.animate-slide-up {
+  animation: slide-up 0.4s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s ease-out;
+}
+
+/* Custom component styles */
+.glass-effect {
+  @apply bg-white/80 backdrop-blur-sm border border-white/20;
+}
+
+.card-hover {
+  @apply transition-all duration-200 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1;
+}
+
+.premium-gradient {
+  background: linear-gradient(135deg, #6946EB 0%, #8B5CF6 100%);
+}
+
+.success-gradient {
+  background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+}
+
+/* Lock icon for premium features */
+.feature-locked {
+  @apply relative opacity-60;
+}
+
+.feature-locked::after {
+  content: '🔒';
+  @apply absolute -top-1 -right-1 text-xs;
 }
