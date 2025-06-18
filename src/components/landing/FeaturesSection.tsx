@@ -54,7 +54,7 @@ export const FeaturesSection: React.FC = () => {
                 <div className={`${feature.color} w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 relative`}>
                   <feature.icon className="h-8 w-8 text-white" />
                   {feature.premium && (
-                    <Crown className="w-4 h-4 text-yellow-400 absolute -top-1 -right-1" />
+                    <Crown className="w-4 h-4 text-blue-300 absolute -top-1 -right-1" />
                   )}
                 </div>
                 <h3 className="text-xl font-bold text-foreground mb-4 flex items-center justify-center gap-2">

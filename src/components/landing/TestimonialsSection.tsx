@@ -43,7 +43,7 @@ export const TestimonialsSection: React.FC = () => {
               <CardContent className="p-8">
                 <div className="flex items-center mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                    <Star key={i} className="h-5 w-5 text-orange-400 fill-current" />
                   ))}
                 </div>
                 <p className="text-muted-foreground mb-6 leading-relaxed">

@@ -3,103 +3,114 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Modern Design System - Inspired by Notion, Linear, Focalboard */
+/* Modern Design System - Clean and Professional */
 
 @layer base {
   :root {
-    --background: 251 251 251; /* #FBFBFB - Very light gray */
-    --foreground: 37 37 37; /* #252525 - Deep charcoal */
+    --background: 255 255 255; /* #FFFFFF - Pure white */
+    --foreground: 15 23 42; /* #0F172A - Deep slate */
 
     --card: 255 255 255; /* #FFFFFF - Pure white */
-    --card-foreground: 37 37 37; /* #252525 */
+    --card-foreground: 15 23 42; /* #0F172A */
 
     --popover: 255 255 255; /* #FFFFFF */
-    --popover-foreground: 37 37 37; /* #252525 */
+    --popover-foreground: 15 23 42; /* #0F172A */
 
-    --primary: 79 70 229; /* #4F46E5 - Modern indigo */
+    --primary: 59 130 246; /* #3B82F6 - Clean blue */
     --primary-foreground: 255 255 255; /* #FFFFFF */
 
     --secondary: 248 250 252; /* #F8FAFC - Light slate */
     --secondary-foreground: 51 65 85; /* #334155 */
 
-    --muted: 248 250 252; /* #F8FAFC */
+    --muted: 241 245 249; /* #F1F5F9 - Very light slate */
     --muted-foreground: 100 116 139; /* #64748B - Muted slate */
 
-    --accent: 238 242 255; /* #EEF2FF - Light indigo */
-    --accent-foreground: 79 70 229; /* #4F46E5 */
+    --accent: 239 246 255; /* #EFF6FF - Light blue */
+    --accent-foreground: 30 64 175; /* #1E40AF */
 
-    --destructive: 220 38 38; /* #DC2626 - Clean red */
+    --destructive: 239 68 68; /* #EF4444 - Clean red */
     --destructive-foreground: 255 255 255; /* #FFFFFF */
 
-    --border: 228 228 231; /* #E4E4E7 - Subtle gray */
-    --input: 228 228 231; /* #E4E4E7 */
-    --ring: 79 70 229; /* #4F46E5 */
+    --border: 226 232 240; /* #E2E8F0 - Light slate border */
+    --input: 226 232 240; /* #E2E8F0 */
+    --ring: 59 130 246; /* #3B82F6 */
 
     --radius: 8px;
 
     --sidebar-background: 255 255 255; /* #FFFFFF */
-    --sidebar-foreground: 37 37 37; /* #252525 */
-    --sidebar-primary: 255 255 255; /* #FFFFFF */
+    --sidebar-foreground: 15 23 42; /* #0F172A */
+    --sidebar-primary: 59 130 246; /* #3B82F6 */
     --sidebar-primary-foreground: 255 255 255; /* #FFFFFF */
     --sidebar-accent: 248 250 252; /* #F8FAFC */
-    --sidebar-accent-foreground: 37 37 37; /* #252525 */
-    --sidebar-border: 228 228 231; /* #E4E4E7 */
-    --sidebar-ring: 79 70 229; /* #4F46E5 */
+    --sidebar-accent-foreground: 15 23 42; /* #0F172A */
+    --sidebar-border: 226 232 240; /* #E2E8F0 */
+    --sidebar-ring: 59 130 246; /* #3B82F6 */
 
     /* Modern productivity colors */
-    --success: 22 163 74; /* #16A34A - Clean green */
-    --warning: 245 158 11; /* #F59E0B - Warm amber */
+    --success: 34 197 94; /* #22C55E - Clean green */
+    --warning: 249 115 22; /* #F97316 - Orange instead of yellow */
     --info: 59 130 246; /* #3B82F6 - Clear blue */
     
-    /* Task status colors */
+    /* Task status colors - no yellow */
     --status-todo: 148 163 184; /* #94A3B8 - Slate gray */
-    --status-doing: 245 158 11; /* #F59E0B - Amber */
-    --status-done: 22 163 74; /* #16A34A - Green */
+    --status-doing: 249 115 22; /* #F97316 - Orange */
+    --status-done: 34 197 94; /* #22C55E - Green */
     
-    /* Priority colors */
+    /* Priority colors - no yellow */
     --priority-low: 34 197 94; /* #22C55E - Soft green */
-    --priority-medium: 245 158 11; /* #F59E0B - Amber */
+    --priority-medium: 249 115 22; /* #F97316 - Orange */
     --priority-high: 239 68 68; /* #EF4444 - Red */
     --priority-critical: 147 51 234; /* #9333EA - Purple */
   }
 
   .dark {
-    --background: 9 9 11; /* #09090B - Near black */
-    --foreground: 250 250 250; /* #FAFAFA - Off white */
+    --background: 2 6 23; /* #020617 - Very dark blue */
+    --foreground: 248 250 252; /* #F8FAFC - Off white */
 
-    --card: 24 24 27; /* #18181B - Dark zinc */
-    --card-foreground: 250 250 250; /* #FAFAFA */
+    --card: 15 23 42; /* #0F172A - Dark slate */
+    --card-foreground: 248 250 252; /* #F8FAFC */
 
-    --popover: 24 24 27; /* #18181B */
-    --popover-foreground: 250 250 250; /* #FAFAFA */
+    --popover: 15 23 42; /* #0F172A */
+    --popover-foreground: 248 250 252; /* #F8FAFC */
 
-    --primary: 99 102 241; /* #6366F1 - Lighter indigo for dark mode */
-    --primary-foreground: 24 24 27; /* #18181B */
+    --primary: 96 165 250; /* #60A5FA - Lighter blue for dark mode */
+    --primary-foreground: 15 23 42; /* #0F172A */
 
-    --secondary: 39 39 42; /* #27272A - Dark zinc */
-    --secondary-foreground: 250 250 250; /* #FAFAFA */
+    --secondary: 30 41 59; /* #1E293B - Dark slate */
+    --secondary-foreground: 248 250 252; /* #F8FAFC */
 
-    --muted: 39 39 42; /* #27272A */
-    --muted-foreground: 161 161 170; /* #A1A1AA - Zinc gray */
+    --muted: 30 41 59; /* #1E293B */
+    --muted-foreground: 148 163 184; /* #94A3B8 - Slate gray */
 
-    --accent: 39 39 42; /* #27272A */
-    --accent-foreground: 250 250 250; /* #FAFAFA */
+    --accent: 30 41 59; /* #1E293B */
+    --accent-foreground: 248 250 252; /* #F8FAFC */
 
-    --destructive: 239 68 68; /* #EF4444 */
-    --destructive-foreground: 250 250 250; /* #FAFAFA */
+    --destructive: 248 113 113; /* #F87171 - Softer red for dark */
+    --destructive-foreground: 248 250 252; /* #F8FAFC */
 
-    --border: 39 39 42; /* #27272A */
-    --input: 39 39 42; /* #27272A */
-    --ring: 99 102 241; /* #6366F1 */
+    --border: 30 41 59; /* #1E293B */
+    --input: 30 41 59; /* #1E293B */
+    --ring: 96 165 250; /* #60A5FA */
 
-    --sidebar-background: 24 24 27; /* #18181B */
-    --sidebar-foreground: 250 250 250; /* #FAFAFA */
-    --sidebar-primary: 99 102 241; /* #6366F1 */
-    --sidebar-primary-foreground: 24 24 27; /* #18181B */
-    --sidebar-accent: 39 39 42; /* #27272A */
-    --sidebar-accent-foreground: 250 250 250; /* #FAFAFA */
-    --sidebar-border: 39 39 42; /* #27272A */
-    --sidebar-ring: 99 102 241; /* #6366F1 */
+    --sidebar-background: 15 23 42; /* #0F172A */
+    --sidebar-foreground: 248 250 252; /* #F8FAFC */
+    --sidebar-primary: 96 165 250; /* #60A5FA */
+    --sidebar-primary-foreground: 15 23 42; /* #0F172A */
+    --sidebar-accent: 30 41 59; /* #1E293B */
+    --sidebar-accent-foreground: 248 250 252; /* #F8FAFC */
+    --sidebar-border: 30 41 59; /* #1E293B */
+    --sidebar-ring: 96 165 250; /* #60A5FA */
+
+    /* Dark mode status colors */
+    --status-todo: 71 85 105; /* #475569 */
+    --status-doing: 249 115 22; /* #F97316 */
+    --status-done: 34 197 94; /* #22C55E */
+    
+    /* Dark mode priority colors */
+    --priority-low: 34 197 94; /* #22C55E */
+    --priority-medium: 249 115 22; /* #F97316 */
+    --priority-high: 248 113 113; /* #F87171 */
+    --priority-critical: 196 181 253; /* #C4B5FD */
   }
 }
 
@@ -111,6 +122,7 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 }
 
@@ -162,19 +174,19 @@
 
 /* Modern component styles */
 .glass-effect {
-  @apply bg-white/90 backdrop-blur-sm border border-white/20;
+  @apply bg-background/90 backdrop-blur-sm border border-border/20;
 }
 
 .card-hover {
   @apply transition-all duration-200 hover:shadow-lg hover:shadow-black/5 hover:-translate-y-0.5;
 }
 
-.modern-gradient {
-  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+.premium-gradient {
+  background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
 }
 
 .success-gradient {
-  background: linear-gradient(135deg, #16A34A 0%, #15803D 100%);
+  background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
 }
 
 .status-gradient-todo {
@@ -182,11 +194,11 @@
 }
 
 .status-gradient-doing {
-  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+  background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%);
 }
 
 .status-gradient-done {
-  background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+  background: linear-gradient(135deg, #DCFCE7 0%, #BBF7D0 100%);
 }
 
 /* Modern shadows */
@@ -212,15 +224,15 @@
 }
 
 .calendar-event-todo {
-  @apply bg-slate-100 text-slate-700 border border-slate-200;
+  @apply bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700;
 }
 
 .calendar-event-doing {
-  @apply bg-amber-100 text-amber-800 border border-amber-200;
+  @apply bg-orange-100 text-orange-800 border border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800;
 }
 
 .calendar-event-done {
-  @apply bg-green-100 text-green-800 border border-green-200;
+  @apply bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800;
 }
 
 /* Board tabs */

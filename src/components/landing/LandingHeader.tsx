@@ -3,6 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Zap, ArrowRight } from 'lucide-react';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export const LandingHeader: React.FC = () => {
   return (
@@ -29,6 +30,7 @@ export const LandingHeader: React.FC = () => {
           </nav>
           
           <div className="flex items-center space-x-3">
+            <ThemeToggle />
             <Link to="/auth">
               <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
                 Entrar
