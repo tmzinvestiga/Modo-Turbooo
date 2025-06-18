@@ -81,8 +81,10 @@ export const DayTasksDialog = ({ isOpen, onClose, date, tasks }: DayTasksDialogP
                 <div className="flex items-center justify-between text-sm text-gray-400 mb-3">
                   <div className="flex items-center gap-4">
                     <span>Recorrência: {
-                      task.recurrence === 'once' ? 'Uma vez' :
-                      task.recurrence === 'daily' ? 'Diário' : 'Semanal'
+                      task.recurrence === 'none' ? 'Uma vez' :
+                      task.recurrence === 'daily' ? 'Diário' : 
+                      task.recurrence === 'weekly' ? 'Semanal' :
+                      task.recurrence === 'monthly' ? 'Mensal' : 'Personalizada'
                     }</span>
                     <span>Pontos: {task.points}</span>
                   </div>

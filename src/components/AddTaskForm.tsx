@@ -18,7 +18,7 @@ interface AddTaskFormProps {
 export const AddTaskForm = ({ initialStatus, onAddTask, onCancel }: AddTaskFormProps) => {
   const [title, setTitle] = useState('');
   const [dueDate, setDueDate] = useState<Date>(new Date());
-  const [recurrence, setRecurrence] = useState<'once' | 'daily' | 'weekly'>('once');
+  const [recurrence, setRecurrence] = useState<'none' | 'daily' | 'weekly'>('none');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +34,7 @@ export const AddTaskForm = ({ initialStatus, onAddTask, onCancel }: AddTaskFormP
 
     setTitle('');
     setDueDate(new Date());
-    setRecurrence('once');
+    setRecurrence('none');
   };
 
   return (
@@ -65,12 +65,12 @@ export const AddTaskForm = ({ initialStatus, onAddTask, onCancel }: AddTaskFormP
           </PopoverContent>
         </Popover>
         
-        <Select value={recurrence} onValueChange={(value: 'once' | 'daily' | 'weekly') => setRecurrence(value)}>
+        <Select value={recurrence} onValueChange={(value: 'none' | 'daily' | 'weekly') => setRecurrence(value)}>
           <SelectTrigger className="flex-1 bg-gray-800 border-gray-600 text-white">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="bg-gray-800 border-gray-600">
-            <SelectItem value="once">Once</SelectItem>
+            <SelectItem value="none">Once</SelectItem>
             <SelectItem value="daily">Daily</SelectItem>
             <SelectItem value="weekly">Weekly</SelectItem>
           </SelectContent>
