@@ -17,21 +17,24 @@ import {
   Star, 
   CheckCircle,
   ArrowRight,
-  Play
+  Play,
+  Target,
+  Repeat,
+  Filter
 } from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
+      <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-2">
-              <Zap className="h-8 w-8 text-blue-600" />
-              <span className="text-2xl font-bold text-gray-900">MODO TURBO</span>
+              <Zap className="h-8 w-8 text-primary" />
+              <span className="text-2xl font-bold text-gray-900 dark:text-white">MODO TURBO</span>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -59,11 +62,10 @@ export const LandingPage: React.FC = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
               
-              <Link to="/login">
-                <Button variant="outline">Entrar</Button>
-              </Link>
-              <Link to="/register">
-                <Button>Registrar</Button>
+              <Link to="/auth">
+                <Button className="bg-primary hover:bg-primary/90">
+                  Entrar / Registrar
+                </Button>
               </Link>
             </div>
           </div>
@@ -74,18 +76,18 @@ export const LandingPage: React.FC = () => {
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center">
-            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6">
+            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 dark:text-white mb-6">
               Turbine Sua
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
                 {' '}Produtividade
               </span>
             </h1>
-            <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              A plataforma definitiva que combina Kanban, calendário e gamificação para transformar sua rotina em conquistas épicas.
+            <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
+              A plataforma definitiva que combina Kanban inteligente, calendário sincronizado e gamificação para transformar sua rotina em conquistas épicas.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/register">
-                <Button size="lg" className="text-lg px-8 py-4">
+              <Link to="/auth">
+                <Button size="lg" className="text-lg px-8 py-4 bg-primary hover:bg-primary/90">
                   Começar Gratuitamente
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
@@ -100,45 +102,55 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
               Recursos Que Fazem a Diferença
             </h2>
-            <p className="text-xl text-gray-600">
+            <p className="text-xl text-gray-600 dark:text-gray-300">
               Tudo que você precisa para ser mais produtivo em um só lugar
             </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center p-8 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-lg transition-shadow">
-              <div className="bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="text-center p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 hover:shadow-lg transition-shadow">
+              <div className="bg-primary w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
                 <BarChart3 className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Kanban Inteligente</h3>
-              <p className="text-gray-600">
-                Organize suas tarefas com quadros Kanban personalizáveis e acompanhe o progresso em tempo real.
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Kanban Inteligente</h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Organize suas tarefas com quadros Kanban totalmente personalizáveis e editáveis.
               </p>
             </div>
             
-            <div className="text-center p-8 rounded-2xl bg-gradient-to-br from-purple-50 to-purple-100 hover:shadow-lg transition-shadow">
-              <div className="bg-purple-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="text-center p-6 rounded-2xl bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 hover:shadow-lg transition-shadow">
+              <div className="bg-accent w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Calendar className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Calendário Integrado</h3>
-              <p className="text-gray-600">
-                Sincronize suas tarefas com um calendário inteligente que se adapta à sua rotina.
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Calendário Integrado</h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Sincronize com Google Calendar e visualize suas tarefas em diferentes perspectivas.
               </p>
             </div>
             
-            <div className="text-center p-8 rounded-2xl bg-gradient-to-br from-green-50 to-green-100 hover:shadow-lg transition-shadow">
+            <div className="text-center p-6 rounded-2xl bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 hover:shadow-lg transition-shadow">
               <div className="bg-green-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Star className="h-8 w-8 text-white" />
+                <Repeat className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Gamificação</h3>
-              <p className="text-gray-600">
-                Transforme suas tarefas em conquistas com sistema de pontos, badges e rankings.
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Tarefas Recorrentes</h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Configure tarefas diárias, semanais ou personalizadas que se repetem automaticamente.
+              </p>
+            </div>
+
+            <div className="text-center p-6 rounded-2xl bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 hover:shadow-lg transition-shadow">
+              <div className="bg-orange-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Filter className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Filtros Avançados</h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Filtre por tags, prioridades, status e muito mais para focar no que importa.
               </p>
             </div>
           </div>
@@ -146,41 +158,55 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* Benefits Section */}
-      <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+      <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-4xl font-bold text-gray-900 mb-6">
+              <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-6">
                 Por Que Escolher o MODO TURBO?
               </h2>
               <div className="space-y-6">
                 <div className="flex items-start space-x-4">
                   <CheckCircle className="h-6 w-6 text-green-600 mt-1" />
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-900">Aumento de 300% na Produtividade</h3>
-                    <p className="text-gray-600">Usuários relatam triplicar sua eficiência em apenas 30 dias.</p>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Aumento de 300% na Produtividade</h3>
+                    <p className="text-gray-600 dark:text-gray-300">Usuários relatam triplicar sua eficiência em apenas 30 dias.</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-4">
                   <CheckCircle className="h-6 w-6 text-green-600 mt-1" />
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-900">Interface Intuitiva</h3>
-                    <p className="text-gray-600">Design limpo e moderno que você aprende em minutos.</p>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Interface Intuitiva</h3>
+                    <p className="text-gray-600 dark:text-gray-300">Design moderno inspirado em Trello e Focalboard que você aprende em minutos.</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-4">
                   <CheckCircle className="h-6 w-6 text-green-600 mt-1" />
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-900">Sincronização Total</h3>
-                    <p className="text-gray-600">Acesse seus dados em qualquer dispositivo, a qualquer hora.</p>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Sincronização Total</h3>
+                    <p className="text-gray-600 dark:text-gray-300">Acesse seus dados em qualquer dispositivo, com integração completa ao Google Calendar.</p>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="bg-white p-8 rounded-2xl shadow-xl">
-              <div className="bg-gradient-to-br from-blue-600 to-purple-600 p-6 rounded-xl text-white text-center">
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl">
+              <div className="bg-gradient-to-br from-primary to-accent p-6 rounded-xl text-white text-center">
                 <h3 className="text-2xl font-bold mb-2">Dashboard Preview</h3>
                 <p className="opacity-90">Visualize seu progresso em tempo real</p>
+                <div className="mt-4 grid grid-cols-3 gap-2">
+                  <div className="bg-white/20 rounded p-2">
+                    <div className="text-xs">A Fazer</div>
+                    <div className="text-lg font-bold">12</div>
+                  </div>
+                  <div className="bg-white/20 rounded p-2">
+                    <div className="text-xs">Fazendo</div>
+                    <div className="text-lg font-bold">3</div>
+                  </div>
+                  <div className="bg-white/20 rounded p-2">
+                    <div className="text-xs">Feito</div>
+                    <div className="text-lg font-bold">28</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -191,7 +217,7 @@ export const LandingPage: React.FC = () => {
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
               O Que Nossos Usuários Dizem
             </h2>
           </div>
@@ -261,7 +287,7 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-600">
+      <section className="py-20 bg-gradient-to-r from-primary to-accent">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
             Pronto Para Turbinar Sua Produtividade?
@@ -269,7 +295,7 @@ export const LandingPage: React.FC = () => {
           <p className="text-xl text-blue-100 mb-8">
             Junte-se a milhares de usuários que já transformaram sua rotina
           </p>
-          <Link to="/register">
+          <Link to="/auth">
             <Button size="lg" variant="secondary" className="text-lg px-8 py-4">
               Começar Agora - É Grátis!
               <ArrowRight className="ml-2 h-5 w-5" />
@@ -284,7 +310,7 @@ export const LandingPage: React.FC = () => {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <Zap className="h-6 w-6 text-blue-400" />
+                <Zap className="h-6 w-6 text-primary" />
                 <span className="text-xl font-bold">MODO TURBO</span>
               </div>
               <p className="text-gray-400">
@@ -324,4 +350,3 @@ export const LandingPage: React.FC = () => {
     </div>
   );
 };
-

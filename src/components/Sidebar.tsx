@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Home, Calendar, BarChart3, Settings, LogOut, Zap } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -32,16 +33,16 @@ export const Sidebar = () => {
   };
 
   return (
-    <SidebarUI className="border-r border-gray-700 bg-gray-900">
+    <SidebarUI className="border-r border-sidebar-border bg-sidebar">
       <SidebarHeader className="p-6">
-        <div className="flex items-center space-x-2">
-          <Zap className="h-6 w-6 text-blue-400" />
-          <h1 className="text-xl font-bold text-white">MODO TURBO</h1>
+        <div className="flex items-center space-x-2 animate-fade-in">
+          <Zap className="h-6 w-6 text-sidebar-primary" />
+          <h1 className="text-xl font-bold text-sidebar-foreground">MODO TURBO</h1>
         </div>
         {user && (
-          <div className="mt-4 p-3 bg-gray-800 rounded-lg">
-            <p className="text-sm text-gray-300">Bem-vindo,</p>
-            <p className="font-medium text-white">{user.name}</p>
+          <div className="mt-4 p-3 bg-sidebar-accent rounded-lg">
+            <p className="text-sm text-sidebar-foreground/70">Bem-vindo,</p>
+            <p className="font-medium text-sidebar-foreground">{user.name}</p>
           </div>
         )}
       </SidebarHeader>
@@ -52,8 +53,10 @@ export const Sidebar = () => {
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton
                 asChild
-                className={`w-full text-gray-300 hover:text-white hover:bg-gray-700 ${
-                  location.pathname === item.url ? 'bg-blue-600 text-white' : ''
+                className={`w-full text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent transition-all duration-200 ${
+                  location.pathname === item.url 
+                    ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm' 
+                    : ''
                 }`}
               >
                 <Link to={item.url} className="flex items-center gap-3 px-3 py-2">
@@ -71,7 +74,7 @@ export const Sidebar = () => {
           <SidebarMenuItem>
             <SidebarMenuButton 
               onClick={handleLogout}
-              className="w-full text-gray-300 hover:text-white hover:bg-red-600 cursor-pointer"
+              className="w-full text-sidebar-foreground hover:text-white hover:bg-red-600 cursor-pointer transition-all duration-200"
             >
               <LogOut className="w-5 h-5" />
               <span>Sair</span>
@@ -82,4 +85,3 @@ export const Sidebar = () => {
     </SidebarUI>
   );
 };
-
