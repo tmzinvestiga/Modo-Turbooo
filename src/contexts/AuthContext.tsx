@@ -1,159 +1,91 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from "react";
+import * as authService from "../services/authService"; // importa do service
+import { User as FirebaseUser, onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from "../firebase";
 
-interface User {
+// Defina o tipo de usuário que você quiser expor na sua app
+type User = {
   id: string;
-  email: string;
-  name: string;
-}
-
-interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
-  logout: () => void;
-  verifyEmail: (token: string) => Promise<void>;
-  resendVerification: (email: string) => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  email: string | null;
+  name?: string | null;
 };
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
+type AuthContextType = {
+  user: User | null;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, name: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
+  logout: () => Promise<void>;
+};
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+const AuthContext = createContext<AuthContextType>({} as AuthContextType);
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    // Check if user is logged in from localStorage
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
+  // Sincroniza estado do usuário com Firebase
+  React.useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        setUser({
+          id: firebaseUser.uid,
+          email: firebaseUser.email,
+          name: firebaseUser.displayName,
+        });
+      } else {
+        setUser(null);
+      }
+    });
+    return unsubscribe;
   }, []);
 
-  const login = async (email: string, password: string): Promise<void> => {
+  const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Mock API call - replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const mockUser: User = {
-        id: '1',
-        email,
-        name: email.split('@')[0]
-      };
-      
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
-    } catch (error) {
-      throw new Error('Login failed');
+      await authService.login(email, password);
+      // O onAuthStateChanged vai atualizar o estado
     } finally {
       setIsLoading(false);
     }
   };
 
-  const loginWithGoogle = async (): Promise<void> => {
+  const register = async (email: string, password: string, name: string) => {
     setIsLoading(true);
     try {
-      // Mock Google login - replace with actual Google OAuth
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const mockUser: User = {
-        id: '1',
-        email: 'user@gmail.com',
-        name: 'Google User'
-      };
-      
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
-    } catch (error) {
-      throw new Error('Google login failed');
+      await authService.register(email, password, name);
+      // O onAuthStateChanged vai atualizar o estado
     } finally {
       setIsLoading(false);
     }
   };
 
-  const register = async (email: string, password: string, name: string): Promise<void> => {
+  const loginWithGoogle = async () => {
     setIsLoading(true);
     try {
-      // Mock API call - replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // For demo purposes, we'll simulate email verification requirement
-      localStorage.setItem('pendingVerification', email);
-    } catch (error) {
-      throw new Error('Registration failed');
+      await authService.loginWithGoogle();
+      // O onAuthStateChanged vai atualizar o estado
     } finally {
       setIsLoading(false);
     }
   };
 
-  const verifyEmail = async (token: string): Promise<void> => {
+  const logout = async () => {
     setIsLoading(true);
     try {
-      // Mock email verification - replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const pendingEmail = localStorage.getItem('pendingVerification');
-      if (pendingEmail) {
-        const mockUser: User = {
-          id: '1',
-          email: pendingEmail,
-          name: pendingEmail.split('@')[0]
-        };
-        
-        setUser(mockUser);
-        localStorage.setItem('user', JSON.stringify(mockUser));
-        localStorage.removeItem('pendingVerification');
-      }
-    } catch (error) {
-      throw new Error('Email verification failed');
+      await signOut(auth);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const resendVerification = async (email: string): Promise<void> => {
-    // Mock resend verification - replace with actual API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-  };
-
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('pendingVerification');
-  };
-
-  const value: AuthContextType = {
-    user,
-    isAuthenticated: !!user,
-    isLoading,
-    login,
-    loginWithGoogle,
-    register,
-    logout,
-    verifyEmail,
-    resendVerification
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, loginWithGoogle, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
+export const useAuth = () => useContext(AuthContext);
