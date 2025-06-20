@@ -1,18 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '../contexts/AuthContext';
-import { Zap, Mail, CheckCircle, RefreshCw } from 'lucide-react';
+import { Zap, Mail, CheckCircle, RefreshCw, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export const EmailVerificationPage: React.FC = () => {
   const [isResending, setIsResending] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const { verifyEmail, resendVerification } = useAuth();
+  const [isChecking, setIsChecking] = useState(false);
+  const { user, sendEmailVerification, reloadUser, isEmailVerified } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const email = location.state?.email || localStorage.getItem('pendingVerification') || '';
+  const email = location.state?.email || user?.email || '';
+
+  // Redirect if already verified
+  useEffect(() => {
+    if (user && isEmailVerified) {
+      navigate('/dashboard');
+    }
+  }, [user, isEmailVerified, navigate]);
+
+  // Redirect if not logged in and no email provided
+  useEffect(() => {
+    if (!user && !email) {
+      navigate('/auth');
+    }
+  }, [user, email, navigate]);
 
   const handleResendVerification = async () => {
     if (!email) {
@@ -22,89 +37,97 @@ export const EmailVerificationPage: React.FC = () => {
 
     setIsResending(true);
     try {
-      await resendVerification(email);
+      await sendEmailVerification();
       toast.success('Email de verificação reenviado!');
-    } catch (error) {
-      toast.error('Erro ao reenviar email de verificação');
+    } catch (error: any) {
+      console.error('Resend verification error:', error);
+      if (error.message?.includes('too-many-requests')) {
+        toast.error('Muitas tentativas. Aguarde antes de tentar novamente.');
+      } else {
+        toast.error('Erro ao reenviar email de verificação');
+      }
     } finally {
       setIsResending(false);
     }
   };
 
-  const handleMockVerification = async () => {
-    setIsVerifying(true);
+  const handleCheckVerification = async () => {
+    setIsChecking(true);
     try {
-      // Simulate clicking verification link
-      await verifyEmail('mock-token');
-      toast.success('Email verificado com sucesso!');
-      navigate('/dashboard');
+      const isVerified = await reloadUser();
+      if (isVerified) {
+        toast.success('Email verificado com sucesso!');
+        navigate('/dashboard');
+      } else {
+        toast.info('Email ainda não foi verificado. Verifique sua caixa de entrada.');
+      }
     } catch (error) {
-      toast.error('Erro ao verificar email');
+      console.error('Check verification error:', error);
+      toast.error('Erro ao verificar status do email');
     } finally {
-      setIsVerifying(false);
+      setIsChecking(false);
     }
   };
 
+  const isLoading = isResending || isChecking;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center space-x-2 text-2xl font-bold text-gray-900">
-            <Zap className="h-8 w-8 text-blue-600" />
+          <Link to="/" className="inline-flex items-center space-x-2 text-2xl font-bold text-gray-900 dark:text-white hover:opacity-80 transition-opacity">
+            <Zap className="h-8 w-8 text-primary" />
             <span>MODO TURBO</span>
           </Link>
         </div>
 
-        <Card className="shadow-xl border-0">
+        <Card className="shadow-xl border-0 bg-white/80 dark:bg-card/80 backdrop-blur-sm">
           <CardHeader className="text-center space-y-4">
-            <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-              <Mail className="h-8 w-8 text-blue-600" />
+            <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+              <Mail className="h-8 w-8 text-primary" />
             </div>
             <CardTitle className="text-2xl">Verifique seu email</CardTitle>
             <CardDescription className="text-center">
               Enviamos um link de verificação para
               <br />
-              <span className="font-medium text-gray-900">{email}</span>
+              <span className="font-medium text-gray-900 dark:text-gray-100">{email}</span>
             </CardDescription>
           </CardHeader>
+          
           <CardContent className="space-y-6">
             <div className="text-center space-y-4">
-              <p className="text-sm text-gray-600">
-                Clique no link do email para ativar sua conta. Se não recebeu o email, verifique sua caixa de spam.
-              </p>
-              
-              {/* Mock verification button for demo purposes */}
-              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <p className="text-sm text-yellow-800 mb-2">
-                  <strong>Demo:</strong> Clique abaixo para simular a verificação do email
-                </p>
-                <Button
-                  onClick={handleMockVerification}
-                  disabled={isVerifying}
-                  className="w-full"
-                  variant="outline"
-                >
-                  {isVerifying ? (
-                    <>
-                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                      Verificando...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                      Simular Verificação
-                    </>
-                  )}
-                </Button>
-              </div>
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Clique no link do email para ativar sua conta. Se não recebeu o email, verifique sua caixa de spam.
+                </AlertDescription>
+              </Alert>
             </div>
 
             <div className="space-y-4">
               <Button
+                onClick={handleCheckVerification}
+                disabled={isLoading}
+                className="w-full"
+              >
+                {isChecking ? (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    Verificando...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Já verifiquei meu email
+                  </>
+                )}
+              </Button>
+
+              <Button
                 variant="outline"
                 className="w-full"
                 onClick={handleResendVerification}
-                disabled={isResending}
+                disabled={isLoading}
               >
                 {isResending ? (
                   <>
@@ -122,7 +145,7 @@ export const EmailVerificationPage: React.FC = () => {
               <div className="text-center">
                 <Link
                   to="/register"
-                  className="text-sm text-blue-600 hover:text-blue-500"
+                  className="text-sm text-primary hover:text-primary/80"
                 >
                   Usar um email diferente
                 </Link>
@@ -130,10 +153,10 @@ export const EmailVerificationPage: React.FC = () => {
             </div>
 
             <div className="text-center pt-4 border-t">
-              <span className="text-sm text-gray-600">
-                Já verificou seu email?{' '}
-                <Link to="/login" className="text-blue-600 hover:text-blue-500 font-medium">
-                  Fazer login
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                Problemas com a verificação?{' '}
+                <Link to="/auth" className="text-primary hover:text-primary/80 font-medium">
+                  Voltar ao login
                 </Link>
               </span>
             </div>

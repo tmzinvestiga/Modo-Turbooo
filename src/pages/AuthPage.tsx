@@ -1,6 +1,5 @@
-
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,105 +7,191 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '../contexts/AuthContext';
-import { Zap, Mail, Lock, Eye, EyeOff, User } from 'lucide-react';
+import { Zap, Mail, Lock, Eye, EyeOff, User, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export const AuthPage: React.FC = () => {
-  const [isLogin, setIsLogin] = useState(true);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user, login, register, loginWithGoogle, isLoading, sendEmailVerification } = useAuth();
+  
+  // Determine initial mode based on route
+  const [isLogin, setIsLogin] = useState(() => {
+    const path = location.pathname;
+    return path === '/login' || path === '/auth';
+  });
+  
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+  
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const { login, register, loginWithGoogle } = useAuth();
-  const navigate = useNavigate();
+  const [formLoading, setFormLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [showEmailNotVerified, setShowEmailNotVerified] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState('');
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
+
+  // Update mode when route changes
+  useEffect(() => {
+    const path = location.pathname;
+    setIsLogin(path === '/login' || path === '/auth');
+    setError('');
+  }, [location.pathname]);
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (error) setError('');
+  };
+
+  const validateForm = () => {
+    const { name, email, password, confirmPassword } = formData;
+    
+    if (isLogin) {
+      if (!email || !password) {
+        setError('Por favor, preencha todos os campos');
+        return false;
+      }
+    } else {
+      if (!name || !email || !password || !confirmPassword) {
+        setError('Por favor, preencha todos os campos');
+        return false;
+      }
+      
+      if (password !== confirmPassword) {
+        setError('As senhas não coincidem');
+        return false;
+      }
+      
+      if (password.length < 6) {
+        setError('A senha deve ter pelo menos 6 caracteres');
+        return false;
+      }
+      
+      if (!acceptTerms) {
+        setError('Você deve aceitar os termos de uso');
+        return false;
+      }
+    }
+    
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     
-    if (isLogin) {
-      // Login flow
-      if (!email || !password) {
-        toast.error('Por favor, preencha todos os campos');
-        return;
-      }
-
-      setIsLoading(true);
-      try {
-        await login(email, password);
+    if (!validateForm()) return;
+    
+    setFormLoading(true);
+    
+    try {
+      if (isLogin) {
+        await login(formData.email, formData.password);
         toast.success('Login realizado com sucesso!');
         navigate('/dashboard');
-      } catch (error) {
-        toast.error('Erro ao fazer login. Verifique suas credenciais.');
-      } finally {
-        setIsLoading(false);
-      }
-    } else {
-      // Register flow
-      if (!name || !email || !password || !confirmPassword) {
-        toast.error('Por favor, preencha todos os campos');
-        return;
-      }
-
-      if (password !== confirmPassword) {
-        toast.error('As senhas não coincidem');
-        return;
-      }
-
-      if (password.length < 6) {
-        toast.error('A senha deve ter pelo menos 6 caracteres');
-        return;
-      }
-
-      if (!acceptTerms) {
-        toast.error('Você deve aceitar os termos de uso');
-        return;
-      }
-
-      setIsLoading(true);
-      try {
-        await register(email, password, name);
+      } else {
+        await register(formData.email, formData.password, formData.name);
         toast.success('Conta criada! Verifique seu email para ativar.');
-        navigate('/verify-email', { state: { email } });
-      } catch (error) {
-        toast.error('Erro ao criar conta. Tente novamente.');
-      } finally {
-        setIsLoading(false);
+        navigate('/verify-email', { state: { email: formData.email } });
       }
+    } catch (error: any) {
+      console.error('Auth error:', error);
+      
+      // Handle specific Firebase errors
+      if (error.name === 'EMAIL_NOT_VERIFIED') {
+        setShowEmailNotVerified(true);
+        setPendingEmail(formData.email);
+        setError('');
+      } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        setError('Email ou senha incorretos');
+      } else if (error.code === 'auth/email-already-in-use') {
+        setError('Este email já está em uso');
+      } else if (error.code === 'auth/weak-password') {
+        setError('A senha é muito fraca');
+      } else if (error.code === 'auth/invalid-email') {
+        setError('Email inválido');
+      } else if (error.code === 'auth/too-many-requests') {
+        setError('Muitas tentativas. Tente novamente mais tarde');
+      } else {
+        setError(isLogin ? 'Erro ao fazer login. Tente novamente.' : 'Erro ao criar conta. Tente novamente.');
+      }
+    } finally {
+      setFormLoading(false);
     }
   };
 
   const handleGoogleAuth = async () => {
-    setIsLoading(true);
+    setError('');
+    setFormLoading(true);
+    
     try {
       await loginWithGoogle();
-      toast.success(isLogin ? 'Login com Google realizado com sucesso!' : 'Conta criada com Google com sucesso!');
+      toast.success('Autenticação com Google realizada com sucesso!');
       navigate('/dashboard');
-    } catch (error) {
-      toast.error('Erro ao autenticar com Google.');
+    } catch (error: any) {
+      console.error('Google auth error:', error);
+      
+      if (error.code === 'auth/popup-closed-by-user') {
+        setError('Login cancelado pelo usuário');
+      } else if (error.code === 'auth/popup-blocked') {
+        setError('Popup bloqueado. Permita popups para este site');
+      } else {
+        setError('Erro ao autenticar com Google. Tente novamente.');
+      }
     } finally {
-      setIsLoading(false);
+      setFormLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    try {
+      await sendEmailVerification();
+      toast.success('Email de verificação reenviado!');
+    } catch (error) {
+      toast.error('Erro ao reenviar email de verificação');
     }
   };
 
   const toggleMode = () => {
-    setIsLogin(!isLogin);
-    // Reset form
-    setName('');
-    setEmail('');
-    setPassword('');
-    setConfirmPassword('');
+    const newMode = !isLogin;
+    setIsLogin(newMode);
+    setError('');
+    setShowEmailNotVerified(false);
+    setPendingEmail('');
+    setFormData({
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: ''
+    });
     setAcceptTerms(false);
+    
+    // Update URL without triggering navigation
+    const newPath = newMode ? '/login' : '/register';
+    window.history.replaceState(null, '', newPath);
   };
+
+  const isFormDisabled = isLoading || formLoading;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md animate-fade-in">
+        {/* Header */}
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center space-x-2 text-2xl font-bold text-gray-900 dark:text-white">
+          <Link to="/" className="inline-flex items-center space-x-2 text-2xl font-bold text-gray-900 dark:text-white hover:opacity-80 transition-opacity">
             <Zap className="h-8 w-8 text-primary" />
             <span>MODO TURBO</span>
           </Link>
@@ -115,6 +200,7 @@ export const AuthPage: React.FC = () => {
           </p>
         </div>
 
+        {/* Auth Card */}
         <Card className="shadow-xl border-0 bg-white/80 dark:bg-card/80 backdrop-blur-sm">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center">
@@ -127,14 +213,56 @@ export const AuthPage: React.FC = () => {
               }
             </CardDescription>
           </CardHeader>
+          
           <CardContent className="space-y-4">
+            {/* Error Alert */}
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {/* Email Not Verified Alert */}
+            {showEmailNotVerified && (
+              <Alert>
+                <Mail className="h-4 w-4" />
+                <AlertDescription>
+                  <div className="space-y-2">
+                    <p>Seu email ainda não foi verificado. Verifique sua caixa de entrada e spam.</p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleResendVerification}
+                        disabled={isFormDisabled}
+                      >
+                        Reenviar email
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setShowEmailNotVerified(false);
+                          setPendingEmail('');
+                        }}
+                        disabled={isFormDisabled}
+                      >
+                        Tentar novamente
+                      </Button>
+                    </div>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Google Auth Button */}
             <Button
               variant="outline"
               className="w-full"
               onClick={handleGoogleAuth}
-              disabled={isLoading}
+              disabled={isFormDisabled}
             >
-              {/* TODO: Add Google OAuth integration when backend is ready */}
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                 <path
                   fill="currentColor"
@@ -153,9 +281,10 @@ export const AuthPage: React.FC = () => {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              Continuar com Google
+              {isFormDisabled ? 'Processando...' : 'Continuar com Google'}
             </Button>
 
+            {/* Divider */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <Separator className="w-full" />
@@ -167,7 +296,9 @@ export const AuthPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Name Field (Register only) */}
               {!isLogin && (
                 <div className="space-y-2">
                   <Label htmlFor="name">Nome completo</Label>
@@ -177,15 +308,17 @@ export const AuthPage: React.FC = () => {
                       id="name"
                       type="text"
                       placeholder="Seu nome completo"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
+                      value={formData.name}
+                      onChange={(e) => handleInputChange('name', e.target.value)}
                       className="pl-10"
+                      disabled={isFormDisabled}
                       required
                     />
                   </div>
                 </div>
               )}
 
+              {/* Email Field */}
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
@@ -194,14 +327,16 @@ export const AuthPage: React.FC = () => {
                     id="email"
                     type="email"
                     placeholder="seu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
                     className="pl-10"
+                    disabled={isFormDisabled}
                     required
                   />
                 </div>
               </div>
 
+              {/* Password Field */}
               <div className="space-y-2">
                 <Label htmlFor="password">Senha</Label>
                 <div className="relative">
@@ -210,21 +345,24 @@ export const AuthPage: React.FC = () => {
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder={isLogin ? 'Sua senha' : 'Mínimo 6 caracteres'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    value={formData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
                     className="pl-10 pr-10"
+                    disabled={isFormDisabled}
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                    disabled={isFormDisabled}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
 
+              {/* Confirm Password Field (Register only) */}
               {!isLogin && (
                 <div className="space-y-2">
                   <Label htmlFor="confirmPassword">Confirmar senha</Label>
@@ -234,15 +372,17 @@ export const AuthPage: React.FC = () => {
                       id="confirmPassword"
                       type={showConfirmPassword ? 'text' : 'password'}
                       placeholder="Confirme sua senha"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      value={formData.confirmPassword}
+                      onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
                       className="pl-10 pr-10"
+                      disabled={isFormDisabled}
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                      disabled={isFormDisabled}
                     >
                       {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
@@ -250,8 +390,9 @@ export const AuthPage: React.FC = () => {
                 </div>
               )}
 
+              {/* Forgot Password Link (Login only) */}
               {isLogin && (
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-end">
                   <Link
                     to="/forgot-password"
                     className="text-sm text-primary hover:text-primary/80"
@@ -261,12 +402,14 @@ export const AuthPage: React.FC = () => {
                 </div>
               )}
 
+              {/* Terms Checkbox (Register only) */}
               {!isLogin && (
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="terms"
                     checked={acceptTerms}
                     onCheckedChange={(checked) => setAcceptTerms(checked as boolean)}
+                    disabled={isFormDisabled}
                   />
                   <Label htmlFor="terms" className="text-sm">
                     Aceito os{' '}
@@ -281,20 +424,23 @@ export const AuthPage: React.FC = () => {
                 </div>
               )}
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading 
+              {/* Submit Button */}
+              <Button type="submit" className="w-full" disabled={isFormDisabled}>
+                {formLoading 
                   ? (isLogin ? 'Entrando...' : 'Criando conta...') 
                   : (isLogin ? 'Entrar' : 'Criar conta')
                 }
               </Button>
             </form>
 
+            {/* Toggle Mode */}
             <div className="text-center">
               <span className="text-sm text-gray-600 dark:text-gray-400">
                 {isLogin ? 'Não tem uma conta?' : 'Já tem uma conta?'}{' '}
                 <button
                   onClick={toggleMode}
-                  className="text-primary hover:text-primary/80 font-medium"
+                  className="text-primary hover:text-primary/80 font-medium disabled:opacity-50"
+                  disabled={isFormDisabled}
                 >
                   {isLogin ? 'Registre-se' : 'Faça login'}
                 </button>
@@ -306,3 +452,4 @@ export const AuthPage: React.FC = () => {
     </div>
   );
 };
+
