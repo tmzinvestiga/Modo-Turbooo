@@ -11,9 +11,11 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { ColorLabelSelector } from '@/components/ColorLabelSelector';
 import { format } from 'date-fns';
 import { CalendarIcon, Tag, X, Save, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { pt } from '@/utils/localization';
 
 interface TaskEditModalProps {
   isOpen: boolean;
@@ -45,14 +47,13 @@ export const TaskEditModal = ({
     recurrence: 'none' as 'none' | 'daily' | 'weekly' | 'monthly' | 'custom',
     weekdays: [] as number[],
     tags: [] as string[],
-    labels: [] as string[]
+    labels: [] as string[] // Now represents color IDs
   });
   
   const [newTag, setNewTag] = useState('');
-  const [newLabel, setNewLabel] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const weekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const weekdayNames = [pt.weekdays.sun, pt.weekdays.mon, pt.weekdays.tue, pt.weekdays.wed, pt.weekdays.thu, pt.weekdays.fri, pt.weekdays.sat];
 
   // Initialize form data when task changes
   useEffect(() => {
@@ -88,7 +89,6 @@ export const TaskEditModal = ({
 
   const handleClose = () => {
     setNewTag('');
-    setNewLabel('');
     onClose();
   };
 
@@ -96,8 +96,8 @@ export const TaskEditModal = ({
     e.preventDefault();
     if (!formData.title.trim()) {
       toast({
-        title: "Error",
-        description: "Task title is required",
+        title: pt.messages.error,
+        description: pt.messages.taskTitleRequired,
         variant: "destructive"
       });
       return;
@@ -123,22 +123,22 @@ export const TaskEditModal = ({
       if (mode === 'edit' && task) {
         onSaveTask({ ...task, ...taskData });
         toast({
-          title: "Success",
-          description: "Task updated successfully"
+          title: pt.messages.success,
+          description: pt.messages.taskUpdated
         });
       } else {
         onSaveTask(taskData);
         toast({
-          title: "Success", 
-          description: "Task created successfully"
+          title: pt.messages.success, 
+          description: pt.messages.taskCreated
         });
       }
 
       handleClose();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to save task",
+        title: pt.messages.error,
+        description: pt.messages.failedToSave,
         variant: "destructive"
       });
     } finally {
@@ -150,8 +150,8 @@ export const TaskEditModal = ({
     if (task && onDeleteTask) {
       onDeleteTask(task.id);
       toast({
-        title: "Success",
-        description: "Task deleted successfully"
+        title: pt.messages.success,
+        description: pt.messages.taskDeleted
       });
       handleClose();
     }
@@ -168,17 +168,6 @@ export const TaskEditModal = ({
     setFormData(prev => ({ ...prev, tags: prev.tags.filter(tag => tag !== tagToRemove) }));
   };
 
-  const addLabel = () => {
-    if (newLabel.trim() && !formData.labels.includes(newLabel.trim())) {
-      setFormData(prev => ({ ...prev, labels: [...prev.labels, newLabel.trim()] }));
-      setNewLabel('');
-    }
-  };
-
-  const removeLabel = (labelToRemove: string) => {
-    setFormData(prev => ({ ...prev, labels: prev.labels.filter(label => label !== labelToRemove) }));
-  };
-
   const toggleWeekday = (day: number) => {
     setFormData(prev => ({
       ...prev,
@@ -193,17 +182,17 @@ export const TaskEditModal = ({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {mode === 'edit' ? 'Edit Task' : 'Create New Task'}
+            {mode === 'edit' ? pt.modal.editTask : pt.modal.createTask}
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title */}
           <div className="space-y-2">
-            <Label htmlFor="title">Task Title *</Label>
+            <Label htmlFor="title">{pt.modal.taskTitle} *</Label>
             <Input
               id="title"
-              placeholder="What needs to be done?"
+              placeholder={pt.modal.titlePlaceholder}
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
               autoFocus
@@ -213,61 +202,61 @@ export const TaskEditModal = ({
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">{pt.modal.description}</Label>
             <Textarea
               id="description"
-              placeholder="Add more details..."
+              placeholder={pt.modal.descriptionPlaceholder}
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               rows={3}
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Status */}
             <div className="space-y-2">
-              <Label>Status</Label>
+              <Label>{pt.modal.status}</Label>
               <Select value={formData.status} onValueChange={(value: 'todo' | 'doing' | 'done') => 
                 setFormData(prev => ({ ...prev, status: value }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="todo">To Do</SelectItem>
-                  <SelectItem value="doing">Doing</SelectItem>
-                  <SelectItem value="done">Done</SelectItem>
+                  <SelectItem value="todo">{pt.columns.todo}</SelectItem>
+                  <SelectItem value="doing">{pt.columns.doing}</SelectItem>
+                  <SelectItem value="done">{pt.columns.done}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Priority */}
             <div className="space-y-2">
-              <Label>Priority</Label>
+              <Label>{pt.modal.priority}</Label>
               <Select value={formData.priority || 'none'} onValueChange={(value) => 
                 setFormData(prev => ({ ...prev, priority: value === 'none' ? undefined : value as any }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No Priority</SelectItem>
-                  <SelectItem value="low">P3 - Low</SelectItem>
-                  <SelectItem value="medium">P2 - Medium</SelectItem>
-                  <SelectItem value="high">P1 - High</SelectItem>
-                  <SelectItem value="critical">Critical</SelectItem>
+                  <SelectItem value="none">{pt.modal.noPriority}</SelectItem>
+                  <SelectItem value="low">{pt.modal.low}</SelectItem>
+                  <SelectItem value="medium">{pt.modal.medium}</SelectItem>
+                  <SelectItem value="high">{pt.modal.high}</SelectItem>
+                  <SelectItem value="critical">{pt.modal.critical}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           {/* Due Date and Time */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Due Date</Label>
+              <Label>{pt.modal.dueDate}</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start">
                     <CalendarIcon className="w-4 h-4 mr-2" />
-                    {format(formData.dueDate, 'MMM dd, yyyy')}
+                    {format(formData.dueDate, 'dd/MM/yyyy')}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
@@ -280,7 +269,7 @@ export const TaskEditModal = ({
               </Popover>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="dueTime">Due Time (Optional)</Label>
+              <Label htmlFor="dueTime">{pt.modal.dueTime}</Label>
               <Input
                 id="dueTime"
                 type="time"
@@ -292,17 +281,17 @@ export const TaskEditModal = ({
 
           {/* Recurrence */}
           <div className="space-y-2">
-            <Label>Recurrence</Label>
+            <Label>{pt.modal.recurrence}</Label>
             <Select value={formData.recurrence} onValueChange={(value: any) => 
               setFormData(prev => ({ ...prev, recurrence: value }))}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">One-time</SelectItem>
-                <SelectItem value="daily">Daily</SelectItem>
-                <SelectItem value="weekly">Weekly</SelectItem>
-                <SelectItem value="monthly">Monthly</SelectItem>
+                <SelectItem value="none">{pt.modal.oneTime}</SelectItem>
+                <SelectItem value="daily">{pt.modal.daily}</SelectItem>
+                <SelectItem value="weekly">{pt.modal.weekly}</SelectItem>
+                <SelectItem value="monthly">{pt.modal.monthly}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -310,7 +299,7 @@ export const TaskEditModal = ({
           {/* Weekly Recurrence Days */}
           {formData.recurrence === 'weekly' && (
             <div className="space-y-2">
-              <Label>Repeat on</Label>
+              <Label>{pt.modal.repeatOn}</Label>
               <div className="flex gap-2 flex-wrap">
                 {weekdayNames.map((day, index) => (
                   <div key={index} className="flex items-center space-x-2">
@@ -330,7 +319,7 @@ export const TaskEditModal = ({
 
           {/* Tags */}
           <div className="space-y-2">
-            <Label>Tags</Label>
+            <Label>{pt.modal.tags}</Label>
             <div className="flex gap-2 mb-2 flex-wrap">
               {formData.tags.map((tag) => (
                 <Badge key={tag} variant="secondary" className="flex items-center gap-1">
@@ -348,7 +337,7 @@ export const TaskEditModal = ({
             </div>
             <div className="flex gap-2">
               <Input
-                placeholder="Add tag..."
+                placeholder={pt.modal.addTag}
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
                 onKeyDown={(e) => {
@@ -359,51 +348,22 @@ export const TaskEditModal = ({
                 }}
               />
               <Button type="button" variant="outline" onClick={addTag}>
-                Add
+                {pt.modal.add}
               </Button>
             </div>
           </div>
 
-          {/* Labels */}
-          <div className="space-y-2">
-            <Label>Labels</Label>
-            <div className="flex gap-2 mb-2 flex-wrap">
-              {formData.labels.map((label) => (
-                <Badge key={label} variant="outline" className="flex items-center gap-1">
-                  {label}
-                  <button
-                    type="button"
-                    onClick={() => removeLabel(label)}
-                    className="ml-1 hover:text-destructive"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Add label..."
-                value={newLabel}
-                onChange={(e) => setNewLabel(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    addLabel();
-                  }
-                }}
-              />
-              <Button type="button" variant="outline" onClick={addLabel}>
-                Add
-              </Button>
-            </div>
-          </div>
+          {/* Color Labels */}
+          <ColorLabelSelector
+            selectedColors={formData.labels}
+            onColorsChange={(colors) => setFormData(prev => ({ ...prev, labels: colors }))}
+          />
 
           {/* Form Actions */}
           <div className="flex gap-2 pt-4">
             <Button type="submit" className="flex-1" disabled={isLoading}>
               <Save className="w-4 h-4 mr-2" />
-              {isLoading ? 'Saving...' : (mode === 'edit' ? 'Update Task' : 'Create Task')}
+              {isLoading ? pt.modal.saving : (mode === 'edit' ? pt.modal.updateTask : pt.modal.createTask)}
             </Button>
             {mode === 'edit' && onDeleteTask && (
               <Button type="button" variant="destructive" onClick={handleDelete}>
@@ -411,7 +371,7 @@ export const TaskEditModal = ({
               </Button>
             )}
             <Button type="button" variant="outline" onClick={handleClose}>
-              Cancel
+              {pt.modal.cancel}
             </Button>
           </div>
         </form>

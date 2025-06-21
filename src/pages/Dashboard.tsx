@@ -7,14 +7,17 @@ import { BoardSelector } from '@/components/BoardSelector';
 import { TaskEditModal } from '@/components/TaskEditModal';
 import { useTaskStore } from '@/hooks/useTaskStore';
 import { useBoard } from '@/contexts/BoardContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Task } from '@/types/Task';
 import { BarChart3, Filter, Plus } from 'lucide-react';
+import { pt } from '@/utils/localization';
 
 export const Dashboard = () => {
   const { tasks, userStats, addTask, updateTask, deleteTask, getTasksByBoard } = useTaskStore();
   const { currentBoard } = useBoard();
+  const isMobile = useIsMobile();
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
@@ -43,7 +46,7 @@ export const Dashboard = () => {
     addTask(taskWithBoard);
   };
 
-  // Handle task reordering within columns
+  // Fixed task reordering within columns
   const handleReorderTasks = (draggedTaskId: string, targetTaskId: string, position: 'before' | 'after') => {
     const draggedTask = filteredTasks.find(t => t.id === draggedTaskId);
     const targetTask = filteredTasks.find(t => t.id === targetTaskId);
@@ -52,20 +55,25 @@ export const Dashboard = () => {
       return;
     }
 
-    // Create a new array with reordered tasks
+    // Get all tasks in the same column, sorted by creation date
     const columnTasks = filteredTasks
-      .filter(t => t.status === draggedTask.status && t.id !== draggedTaskId)
+      .filter(t => t.status === draggedTask.status)
       .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
-    const targetIndex = columnTasks.findIndex(t => t.id === targetTaskId);
+    // Remove the dragged task from the array
+    const tasksWithoutDragged = columnTasks.filter(t => t.id !== draggedTaskId);
+    
+    // Find the target task index in the filtered array
+    const targetIndex = tasksWithoutDragged.findIndex(t => t.id === targetTaskId);
     const insertIndex = position === 'before' ? targetIndex : targetIndex + 1;
 
-    columnTasks.splice(insertIndex, 0, draggedTask);
+    // Insert the dragged task at the new position
+    tasksWithoutDragged.splice(insertIndex, 0, draggedTask);
 
-    // Update the createdAt timestamps to maintain order
-    columnTasks.forEach((task, index) => {
-      const newCreatedAt = new Date();
-      newCreatedAt.setTime(newCreatedAt.getTime() + index * 1000); // Add seconds to maintain order
+    // Update timestamps to reflect new order
+    const baseTime = Date.now();
+    tasksWithoutDragged.forEach((task, index) => {
+      const newCreatedAt = new Date(baseTime + index * 1000);
       updateTask(task.id, { createdAt: newCreatedAt });
     });
   };
@@ -74,8 +82,8 @@ export const Dashboard = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
-          <h2 className="text-2xl font-bold text-foreground">No board selected</h2>
-          <p className="text-muted-foreground">Select a board to view your tasks.</p>
+          <h2 className="text-2xl font-bold text-foreground">{pt.dashboard.noBoard}</h2>
+          <p className="text-muted-foreground">{pt.dashboard.selectBoard}</p>
         </div>
       </div>
     );
@@ -85,13 +93,13 @@ export const Dashboard = () => {
     <div className="min-h-screen bg-background">
       {/* Modern header */}
       <header className="bg-card border-b shadow-sm">
-        <div className="flex items-center justify-between p-6">
+        <div className="flex items-center justify-between p-4 md:p-6">
           <div className="flex items-center gap-4">
             <SidebarTrigger className="text-foreground" />
             <BoardSelector />
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
             <Button
               variant="ghost"
               size="sm"
@@ -99,7 +107,7 @@ export const Dashboard = () => {
               className="flex items-center gap-2"
             >
               <Filter className="w-4 h-4" />
-              Filters
+              <span className="hidden sm:inline">{pt.dashboard.filters}</span>
             </Button>
             <Button 
               size="sm" 
@@ -107,13 +115,13 @@ export const Dashboard = () => {
               onClick={() => setShowNewTaskModal(true)}
             >
               <Plus className="w-4 h-4" />
-              New Task
+              <span className="hidden sm:inline">{pt.dashboard.newTask}</span>
             </Button>
           </div>
         </div>
       </header>
 
-      <div className="p-6 max-w-7xl mx-auto space-y-6">
+      <div className={`p-4 md:p-6 max-w-7xl mx-auto space-y-4 md:space-y-6 ${isMobile ? '' : ''}`}>
         {/* Performance Section */}
         <div className="animate-fade-in">
           <UserStatsCard stats={userStats} />
@@ -129,46 +137,58 @@ export const Dashboard = () => {
         {/* Board Info */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">{currentBoard.name}</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-foreground">{currentBoard.name}</h1>
             {currentBoard.description && (
-              <p className="text-muted-foreground mt-1">{currentBoard.description}</p>
+              <p className="text-muted-foreground mt-1 text-sm md:text-base">{currentBoard.description}</p>
             )}
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <BarChart3 className="w-4 h-4" />
-            {filteredTasks.length} tasks
+            {filteredTasks.length} {pt.dashboard.tasks}
           </div>
         </div>
 
-        {/* Modern Kanban Board */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
-          <TaskColumn
-            title="To Do"
-            status="todo"
-            tasks={filteredTasks}
-            onUpdateTask={updateTask}
-            onDeleteTask={deleteTask}
-            onAddTask={handleAddTask}
-            onReorderTasks={handleReorderTasks}
-          />
-          <TaskColumn
-            title="Doing"
-            status="doing"
-            tasks={filteredTasks}
-            onUpdateTask={updateTask}
-            onDeleteTask={deleteTask}
-            onAddTask={handleAddTask}
-            onReorderTasks={handleReorderTasks}
-          />
-          <TaskColumn
-            title="Done"
-            status="done"
-            tasks={filteredTasks}
-            onUpdateTask={updateTask}
-            onDeleteTask={deleteTask}
-            onAddTask={handleAddTask}
-            onReorderTasks={handleReorderTasks}
-          />
+        {/* Modern Kanban Board - Mobile Horizontal, Desktop Grid */}
+        <div className={`animate-fade-in ${
+          isMobile 
+            ? 'flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory' 
+            : 'grid grid-cols-1 lg:grid-cols-3 gap-6'
+        }`}>
+          <div className={isMobile ? 'flex-shrink-0 w-80 snap-start' : ''}>
+            <TaskColumn
+              title={pt.columns.todo}
+              status="todo"
+              tasks={filteredTasks}
+              onUpdateTask={updateTask}
+              onDeleteTask={deleteTask}
+              onAddTask={handleAddTask}
+              onReorderTasks={handleReorderTasks}
+            />
+          </div>
+          
+          <div className={isMobile ? 'flex-shrink-0 w-80 snap-start' : ''}>
+            <TaskColumn
+              title={pt.columns.doing}
+              status="doing"
+              tasks={filteredTasks}
+              onUpdateTask={updateTask}
+              onDeleteTask={deleteTask}
+              onAddTask={handleAddTask}
+              onReorderTasks={handleReorderTasks}
+            />
+          </div>
+          
+          <div className={isMobile ? 'flex-shrink-0 w-80 snap-start' : ''}>
+            <TaskColumn
+              title={pt.columns.done}
+              status="done"
+              tasks={filteredTasks}
+              onUpdateTask={updateTask}
+              onDeleteTask={deleteTask}
+              onAddTask={handleAddTask}
+              onReorderTasks={handleReorderTasks}
+            />
+          </div>
         </div>
       </div>
 

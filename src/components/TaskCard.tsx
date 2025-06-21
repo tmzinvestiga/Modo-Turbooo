@@ -6,15 +6,25 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { format, isPast, isToday, isTomorrow } from 'date-fns';
+import { pt, colorOptions } from '@/utils/localization';
 
 interface TaskCardProps {
   task: Task;
   onUpdateTask: (taskId: string, updates: Partial<Task>) => void;
   onDeleteTask: (taskId: string) => void;
   onEditTask: (task: Task) => void;
+  isMobile?: boolean;
+  isDraggingMobile?: boolean;
 }
 
-export const TaskCard = ({ task, onUpdateTask, onDeleteTask, onEditTask }: TaskCardProps) => {
+export const TaskCard = ({ 
+  task, 
+  onUpdateTask, 
+  onDeleteTask, 
+  onEditTask, 
+  isMobile = false,
+  isDraggingMobile = false 
+}: TaskCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   
@@ -33,10 +43,9 @@ export const TaskCard = ({ task, onUpdateTask, onDeleteTask, onEditTask }: TaskC
 
   const getRecurrenceText = () => {
     switch (task.recurrence) {
-      case 'daily': return 'Daily';
-      case 'weekly': return 'Weekly';
-      case 'monthly': return 'Monthly';
-      case 'custom': return 'Custom';
+      case 'daily': return pt.modal.daily;
+      case 'weekly': return pt.modal.weekly;
+      case 'monthly': return pt.modal.monthly;
       default: return null;
     }
   };
@@ -53,10 +62,10 @@ export const TaskCard = ({ task, onUpdateTask, onDeleteTask, onEditTask }: TaskC
 
   const getPriorityText = () => {
     switch (task.priority) {
-      case 'critical': return 'Critical';
-      case 'high': return 'High';
-      case 'medium': return 'Medium';
-      case 'low': return 'Low';
+      case 'critical': return pt.modal.critical;
+      case 'high': return pt.modal.high;
+      case 'medium': return pt.modal.medium;
+      case 'low': return pt.modal.low;
       default: return null;
     }
   };
@@ -76,10 +85,17 @@ export const TaskCard = ({ task, onUpdateTask, onDeleteTask, onEditTask }: TaskC
   };
 
   const getDueDateText = () => {
-    if (isDueToday) return 'Today';
-    if (isDueTomorrow) return 'Tomorrow';
-    if (isTaskOverdue) return 'Overdue';
-    return format(task.dueDate, 'MMM dd');
+    if (isDueToday) return pt.task.today;
+    if (isDueTomorrow) return pt.task.tomorrow;
+    if (isTaskOverdue) return pt.task.overdue;
+    return format(task.dueDate, 'dd/MM');
+  };
+
+  const getColorLabels = () => {
+    if (!task.labels || task.labels.length === 0) return [];
+    return task.labels.map(colorId => 
+      colorOptions.find(color => color.id === colorId)
+    ).filter(Boolean);
   };
 
   const handleDragStart = (e: React.DragEvent) => {
@@ -110,30 +126,34 @@ export const TaskCard = ({ task, onUpdateTask, onDeleteTask, onEditTask }: TaskC
     onEditTask(task);
   };
 
+  const colorLabels = getColorLabels();
+
   return (
     <Card 
       className={`bg-card border-border hover:border-accent/50 transition-all duration-200 cursor-pointer group hover:shadow-md ${
-        isDragging ? 'opacity-50 rotate-2 scale-105' : ''
-      } ${isHovered ? 'shadow-lg' : 'shadow-sm'}`}
-      draggable
+        isDragging || isDraggingMobile ? 'opacity-50 rotate-2 scale-105' : ''
+      } ${isHovered ? 'shadow-lg' : 'shadow-sm'} ${isMobile ? 'select-none' : ''}`}
+      draggable={!isMobile}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleCardClick}
     >
-      <CardContent className="p-4">
+      <CardContent className="p-3 md:p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-start gap-2 flex-1">
-            <GripVertical className="w-4 h-4 text-muted-foreground/50 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab" />
+            {!isMobile && (
+              <GripVertical className="w-4 h-4 text-muted-foreground/50 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab" />
+            )}
             <h3 className="text-foreground font-medium text-sm leading-tight flex-1 pr-2">
               {task.title}
             </h3>
           </div>
           <div className="flex items-center gap-2">
             <div className={`w-2 h-2 rounded-full ${getStatusColor()}`} />
-            {isHovered && (
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {(isHovered || isMobile) && (
+              <div className={`flex gap-1 ${isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
                 <Button
                   size="sm"
                   variant="ghost"
@@ -165,6 +185,24 @@ export const TaskCard = ({ task, onUpdateTask, onDeleteTask, onEditTask }: TaskC
           <p className="text-muted-foreground text-xs mb-3 line-clamp-2">
             {task.description}
           </p>
+        )}
+
+        {/* Color Labels */}
+        {colorLabels.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-3">
+            {colorLabels.slice(0, 4).map((color) => (
+              <div
+                key={color!.id}
+                className={`w-4 h-4 rounded-full ${color!.bg} border border-white/20 shadow-sm`}
+                title={color!.name}
+              />
+            ))}
+            {colorLabels.length > 4 && (
+              <div className="w-4 h-4 rounded-full bg-gray-300 border border-white/20 shadow-sm flex items-center justify-center">
+                <span className="text-[8px] font-medium text-gray-700">+{colorLabels.length - 4}</span>
+              </div>
+            )}
+          </div>
         )}
         
         <div className="flex items-center gap-3 text-xs mb-3">
@@ -206,7 +244,7 @@ export const TaskCard = ({ task, onUpdateTask, onDeleteTask, onEditTask }: TaskC
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-xs font-medium">
-              {task.points} pts
+              {task.points} {pt.task.points}
             </Badge>
             
             {task.priority && (
@@ -228,7 +266,7 @@ export const TaskCard = ({ task, onUpdateTask, onDeleteTask, onEditTask }: TaskC
               }}
             >
               <CheckCircle2 className="w-3 h-3 mr-1" />
-              Complete
+              {pt.task.complete}
             </Button>
           )}
         </div>
@@ -237,7 +275,7 @@ export const TaskCard = ({ task, onUpdateTask, onDeleteTask, onEditTask }: TaskC
           <div className="mt-2 flex items-center gap-1">
             <AlertCircle className="w-3 h-3 text-red-500" />
             <span className="text-xs text-red-500 font-medium">
-              Task overdue
+              {pt.task.overdue}
             </span>
           </div>
         )}

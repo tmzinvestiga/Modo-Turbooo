@@ -4,6 +4,7 @@ import { Task } from '@/types/Task';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Check, X } from 'lucide-react';
+import { pt } from '@/utils/localization';
 
 interface QuickAddTaskProps {
   onAddTask: (task: Omit<Task, 'id' | 'createdAt'>) => void;
@@ -41,7 +42,7 @@ export const QuickAddTask = ({ onAddTask, defaultStatus }: QuickAddTaskProps) =>
     return (
       <form onSubmit={handleSubmit} className="space-y-2 p-3 bg-muted/30 rounded-lg border-2 border-dashed border-primary/30">
         <Input
-          placeholder="Task title..."
+          placeholder={pt.modal.titlePlaceholder}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           autoFocus
@@ -50,7 +51,7 @@ export const QuickAddTask = ({ onAddTask, defaultStatus }: QuickAddTaskProps) =>
         <div className="flex gap-2">
           <Button type="submit" size="sm" className="flex-1">
             <Check className="w-3 h-3 mr-1" />
-            Add
+            {pt.modal.add}
           </Button>
           <Button type="button" size="sm" variant="outline" onClick={handleCancel}>
             <X className="w-3 h-3" />
@@ -68,7 +69,7 @@ export const QuickAddTask = ({ onAddTask, defaultStatus }: QuickAddTaskProps) =>
     >
       <div className="flex flex-col items-center gap-2">
         <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />
-        <span className="text-sm">Add Task</span>
+        <span className="text-sm">{pt.task.addTask}</span>
       </div>
     </Button>
   );

@@ -4,6 +4,7 @@ import { Task } from '@/types/Task';
 import { TaskCard } from './TaskCard';
 import { QuickAddTask } from './QuickAddTask';
 import { TaskEditModal } from './TaskEditModal';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Edit2, Check, X } from 'lucide-react';
@@ -27,6 +28,7 @@ export const TaskColumn = ({
   onAddTask,
   onReorderTasks
 }: TaskColumnProps) => {
+  const isMobile = useIsMobile();
   const [isDragOver, setIsDragOver] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [columnTitle, setColumnTitle] = useState(title);
@@ -34,6 +36,8 @@ export const TaskColumn = ({
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [dragOverTaskId, setDragOverTaskId] = useState<string | null>(null);
   const [dragPosition, setDragPosition] = useState<'before' | 'after'>('after');
+  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [isDraggingMobile, setIsDraggingMobile] = useState(false);
   
   const columnTasks = tasks.filter(task => task.status === status);
   
@@ -109,6 +113,29 @@ export const TaskColumn = ({
     setDragOverTaskId(null);
   };
 
+  // Mobile touch handlers for long press drag
+  const handleTouchStart = (e: React.TouchEvent, taskId: string) => {
+    if (!isMobile) return;
+    
+    const timer = setTimeout(() => {
+      setIsDraggingMobile(true);
+      // Add haptic feedback if available
+      if (navigator.vibrate) {
+        navigator.vibrate(50);
+      }
+    }, 500); // 500ms long press
+    
+    setLongPressTimer(timer);
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      setLongPressTimer(null);
+    }
+    setIsDraggingMobile(false);
+  };
+
   const handleTitleEdit = () => {
     setIsEditingTitle(true);
     setTempTitle(columnTitle);
@@ -138,12 +165,12 @@ export const TaskColumn = ({
       <div 
         className={`bg-card rounded-xl border-t-4 ${getColumnColor()} ${getColumnBgColor()} min-h-[600px] flex flex-col transition-all duration-200 shadow-sm hover:shadow-md ${
           isDragOver ? 'ring-2 ring-primary/50 scale-[1.02]' : ''
-        }`}
+        } ${isMobile ? 'touch-pan-y' : ''}`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        <div className="p-4 border-b border-border">
+        <div className="p-3 md:p-4 border-b border-border">
           <div className="flex items-center justify-between">
             {isEditingTitle ? (
               <div className="flex items-center gap-2 flex-1">
@@ -166,7 +193,7 @@ export const TaskColumn = ({
               </div>
             ) : (
               <div className="flex items-center gap-2 flex-1 group">
-                <h2 className="text-foreground font-semibold">{columnTitle}</h2>
+                <h2 className="text-foreground font-semibold text-sm md:text-base">{columnTitle}</h2>
                 <Button 
                   size="sm" 
                   variant="ghost" 
@@ -178,14 +205,14 @@ export const TaskColumn = ({
               </div>
             )}
             <div className="flex items-center gap-2">
-              <span className="bg-muted text-muted-foreground px-2 py-1 rounded-full text-sm font-medium">
+              <span className="bg-muted text-muted-foreground px-2 py-1 rounded-full text-xs font-medium">
                 {columnTasks.length}
               </span>
             </div>
           </div>
         </div>
         
-        <div className="flex-1 p-4 space-y-3 overflow-y-auto">
+        <div className="flex-1 p-3 md:p-4 space-y-3 overflow-y-auto">
           {columnTasks.map((task, index) => (
             <div
               key={task.id}
@@ -196,12 +223,16 @@ export const TaskColumn = ({
               }`}
               onDragOver={(e) => handleTaskDragOver(e, task.id)}
               onDrop={(e) => handleTaskDrop(e, task.id)}
+              onTouchStart={(e) => handleTouchStart(e, task.id)}
+              onTouchEnd={handleTouchEnd}
             >
               <TaskCard
                 task={task}
                 onUpdateTask={onUpdateTask}
                 onDeleteTask={onDeleteTask}
                 onEditTask={handleEditTask}
+                isMobile={isMobile}
+                isDraggingMobile={isDraggingMobile}
               />
             </div>
           ))}
