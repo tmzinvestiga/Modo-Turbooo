@@ -24,6 +24,8 @@ export const useTaskStore = () => {
         dueDate: new Date(task.dueDate),
         completedAt: task.completedAt ? new Date(task.completedAt) : undefined,
         createdAt: task.createdAt ? new Date(task.createdAt) : new Date(),
+        // Ensure boardId exists for backward compatibility
+        boardId: task.boardId || 'default',
       }));
       setTasks(parsedTasks);
     }
@@ -48,6 +50,8 @@ export const useTaskStore = () => {
       ...task,
       id: Date.now().toString(),
       createdAt: new Date(),
+      // Ensure boardId is included
+      boardId: task.boardId || 'default',
     };
     saveTasks([...tasks, newTask]);
   };
@@ -81,11 +85,17 @@ export const useTaskStore = () => {
     saveTasks(newTasks);
   };
 
+  // Get tasks for a specific board
+  const getTasksByBoard = (boardId: string) => {
+    return tasks.filter(task => task.boardId === boardId);
+  };
+
   return {
     tasks,
     userStats,
     addTask,
     updateTask,
     deleteTask,
+    getTasksByBoard,
   };
 };

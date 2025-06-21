@@ -43,13 +43,26 @@ export const BoardProvider = ({ children }: BoardProviderProps) => {
         createdAt: new Date(board.createdAt),
         updatedAt: new Date(board.updatedAt),
       }));
+      
+      // Ensure default board exists
+      const hasDefaultBoard = parsedBoards.some((board: Board) => board.id === 'default');
+      if (!hasDefaultBoard) {
+        parsedBoards.unshift(DEFAULT_BOARD);
+      }
+      
       setBoards(parsedBoards);
       
       if (savedCurrentBoardId) {
         const currentBoard = parsedBoards.find((board: Board) => board.id === savedCurrentBoardId);
         if (currentBoard) {
           setCurrentBoardState(currentBoard);
+        } else {
+          // If saved board doesn't exist, default to first board
+          setCurrentBoardState(parsedBoards[0]);
         }
+      } else {
+        // No saved current board, default to first board
+        setCurrentBoardState(parsedBoards[0]);
       }
     }
   }, []);
@@ -66,7 +79,11 @@ export const BoardProvider = ({ children }: BoardProviderProps) => {
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-    saveBoards([...boards, newBoard]);
+    const newBoards = [...boards, newBoard];
+    saveBoards(newBoards);
+    
+    // Automatically switch to the new board
+    setCurrentBoard(newBoard.id);
   };
 
   const updateBoard = (boardId: string, updates: Partial<Board>) => {

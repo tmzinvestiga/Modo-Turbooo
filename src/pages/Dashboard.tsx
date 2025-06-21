@@ -12,18 +12,18 @@ import { Task } from '@/types/Task';
 import { BarChart3, Filter, Plus } from 'lucide-react';
 
 export const Dashboard = () => {
-  const { tasks, userStats, addTask, updateTask, deleteTask } = useTaskStore();
+  const { tasks, userStats, addTask, updateTask, deleteTask, getTasksByBoard } = useTaskStore();
   const { currentBoard } = useBoard();
-  const [filteredTasks, setFilteredTasks] = useState<Task[]>(tasks);
+  const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Filter tasks by current board (for now, we'll show all tasks)
-  // TODO: Implement board-specific task filtering when backend is ready
+  // Filter tasks by current board
   const boardTasks = useMemo(() => {
-    return tasks; // For now, show all tasks regardless of board
-  }, [tasks]);
+    if (!currentBoard) return [];
+    return getTasksByBoard(currentBoard.id);
+  }, [tasks, currentBoard, getTasksByBoard]);
 
-  // Update filtered tasks when original tasks change
+  // Update filtered tasks when board tasks change
   useMemo(() => {
     setFilteredTasks(boardTasks);
   }, [boardTasks]);
@@ -31,6 +31,26 @@ export const Dashboard = () => {
   const handleFilterChange = (filtered: Task[]) => {
     setFilteredTasks(filtered);
   };
+
+  // Enhanced addTask to include current board
+  const handleAddTask = (task: Omit<Task, 'id' | 'createdAt'>) => {
+    const taskWithBoard = {
+      ...task,
+      boardId: currentBoard?.id || 'default',
+    };
+    addTask(taskWithBoard);
+  };
+
+  if (!currentBoard) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <h2 className="text-2xl font-bold text-foreground">Nenhum quadro selecionado</h2>
+          <p className="text-muted-foreground">Selecione um quadro para visualizar suas tarefas.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -76,8 +96,8 @@ export const Dashboard = () => {
         {/* Board Info */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">{currentBoard?.name}</h1>
-            {currentBoard?.description && (
+            <h1 className="text-2xl font-bold text-foreground">{currentBoard.name}</h1>
+            {currentBoard.description && (
               <p className="text-muted-foreground mt-1">{currentBoard.description}</p>
             )}
           </div>
@@ -95,7 +115,7 @@ export const Dashboard = () => {
             tasks={filteredTasks}
             onUpdateTask={updateTask}
             onDeleteTask={deleteTask}
-            onAddTask={addTask}
+            onAddTask={handleAddTask}
           />
           <TaskColumn
             title="Fazendo"
@@ -103,7 +123,7 @@ export const Dashboard = () => {
             tasks={filteredTasks}
             onUpdateTask={updateTask}
             onDeleteTask={deleteTask}
-            onAddTask={addTask}
+            onAddTask={handleAddTask}
           />
           <TaskColumn
             title="Concluído"
@@ -111,7 +131,7 @@ export const Dashboard = () => {
             tasks={filteredTasks}
             onUpdateTask={updateTask}
             onDeleteTask={deleteTask}
-            onAddTask={addTask}
+            onAddTask={handleAddTask}
           />
         </div>
       </div>
