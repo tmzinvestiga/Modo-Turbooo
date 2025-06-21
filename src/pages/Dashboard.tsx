@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { TaskColumn } from '@/components/TaskColumn';
 import { UserStatsCard } from '@/components/UserStatsCard';
 import { TaskFilter } from '@/components/TaskFilter';
@@ -24,7 +24,7 @@ export const Dashboard = () => {
   }, [tasks, currentBoard, getTasksByBoard]);
 
   // Update filtered tasks when board tasks change
-  useMemo(() => {
+  useEffect(() => {
     setFilteredTasks(boardTasks);
   }, [boardTasks]);
 
