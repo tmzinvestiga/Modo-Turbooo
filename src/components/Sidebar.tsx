@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Home, Calendar, BarChart3, Settings, LogOut, Zap } from 'lucide-react';
+import { Home, Calendar, BarChart3, Settings, LogOut, Zap, FileText } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 
 const menuItems = [
   { title: 'Dashboard', icon: Home, url: '/dashboard' },
+  { title: 'Templates', icon: FileText, url: '/templates' },
   { title: 'Calendário', icon: Calendar, url: '/calendar' },
   { title: 'Performance', icon: BarChart3, url: '/performance' },
   { title: 'Configurações', icon: Settings, url: '/settings' },

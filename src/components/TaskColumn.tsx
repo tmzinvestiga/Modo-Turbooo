@@ -36,10 +36,9 @@ export const TaskColumn = ({
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [dragOverTaskId, setDragOverTaskId] = useState<string | null>(null);
   const [dragPosition, setDragPosition] = useState<'before' | 'after'>('after');
-  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
-  const [isDraggingMobile, setIsDraggingMobile] = useState(false);
   
-  const columnTasks = tasks.filter(task => task.status === status);
+  const columnTasks = tasks.filter(task => task.status === status)
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   
   const getColumnColor = () => {
     switch (status) {
@@ -55,6 +54,11 @@ export const TaskColumn = ({
       case 'doing': return 'bg-yellow-500/5';
       case 'done': return 'bg-green-500/5';
     }
+  };
+
+  const handleDragStart = (e: React.DragEvent, taskId: string) => {
+    e.dataTransfer.setData('text/plain', taskId);
+    e.dataTransfer.effectAllowed = 'move';
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -77,8 +81,13 @@ export const TaskColumn = ({
     setDragOverTaskId(null);
     
     const taskId = e.dataTransfer.getData('text/plain');
-    if (taskId) {
-      onUpdateTask(taskId, { status });
+    const draggedTask = tasks.find(t => t.id === taskId);
+    
+    if (taskId && draggedTask) {
+      // If dropping on empty column area and task has different status, move it
+      if (draggedTask.status !== status) {
+        onUpdateTask(taskId, { status });
+      }
     }
   };
 
@@ -94,46 +103,34 @@ export const TaskColumn = ({
     setDragPosition(position);
   };
 
+  const handleTaskDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setDragOverTaskId(null);
+    }
+  };
+
   const handleTaskDrop = (e: React.DragEvent, targetTaskId: string) => {
     e.preventDefault();
     e.stopPropagation();
     
     const draggedTaskId = e.dataTransfer.getData('text/plain');
-    if (draggedTaskId && draggedTaskId !== targetTaskId) {
+    const draggedTask = tasks.find(t => t.id === draggedTaskId);
+    const targetTask = tasks.find(t => t.id === targetTaskId);
+    
+    if (draggedTaskId && draggedTask && targetTask && draggedTaskId !== targetTaskId) {
       // Check if it's a reorder within the same column
-      const draggedTask = tasks.find(t => t.id === draggedTaskId);
-      if (draggedTask && draggedTask.status === status) {
+      if (draggedTask.status === status && targetTask.status === status) {
         onReorderTasks(draggedTaskId, targetTaskId, dragPosition);
-      } else {
+      } else if (draggedTask.status !== status) {
         // Cross-column move
         onUpdateTask(draggedTaskId, { status });
       }
     }
     
     setDragOverTaskId(null);
-  };
-
-  // Mobile touch handlers for long press drag
-  const handleTouchStart = (e: React.TouchEvent, taskId: string) => {
-    if (!isMobile) return;
-    
-    const timer = setTimeout(() => {
-      setIsDraggingMobile(true);
-      // Add haptic feedback if available
-      if (navigator.vibrate) {
-        navigator.vibrate(50);
-      }
-    }, 500); // 500ms long press
-    
-    setLongPressTimer(timer);
-  };
-
-  const handleTouchEnd = () => {
-    if (longPressTimer) {
-      clearTimeout(longPressTimer);
-      setLongPressTimer(null);
-    }
-    setIsDraggingMobile(false);
   };
 
   const handleTitleEdit = () => {
@@ -216,15 +213,14 @@ export const TaskColumn = ({
           {columnTasks.map((task, index) => (
             <div
               key={task.id}
-              className={`relative ${
+              className={`relative transition-all duration-200 ${
                 dragOverTaskId === task.id
-                  ? `${dragPosition === 'before' ? 'border-t-2' : 'border-b-2'} border-primary`
+                  ? `${dragPosition === 'before' ? 'border-t-2 pt-2' : 'border-b-2 pb-2'} border-primary`
                   : ''
               }`}
               onDragOver={(e) => handleTaskDragOver(e, task.id)}
+              onDragLeave={handleTaskDragLeave}
               onDrop={(e) => handleTaskDrop(e, task.id)}
-              onTouchStart={(e) => handleTouchStart(e, task.id)}
-              onTouchEnd={handleTouchEnd}
             >
               <TaskCard
                 task={task}
@@ -232,7 +228,7 @@ export const TaskColumn = ({
                 onDeleteTask={onDeleteTask}
                 onEditTask={handleEditTask}
                 isMobile={isMobile}
-                isDraggingMobile={isDraggingMobile}
+                onDragStart={handleDragStart}
               />
             </div>
           ))}

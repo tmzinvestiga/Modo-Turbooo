@@ -8,12 +8,14 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { PlanProvider } from "./contexts/PlanContext";
 import { BoardProvider } from "./contexts/BoardContext";
+import { TemplateProvider } from "./contexts/TemplateContext";
 import { LandingPage } from "./pages/LandingPage";
 import { AuthPage } from "./pages/AuthPage";
 import { EmailVerificationPage } from "./pages/EmailVerificationPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Layout } from "./components/Layout";
 import { Dashboard } from "./pages/Dashboard";
+import { Templates } from "./pages/Templates";
 import { CalendarView } from "./pages/CalendarView";
 import { Performance } from "./pages/Performance";
 import { Settings } from "./pages/Settings";
@@ -30,56 +32,68 @@ const App = () => (
         <AuthProvider>
           <PlanProvider>
             <BoardProvider>
-              <BrowserRouter>
-                <Routes>
-                  <Route path="/" element={<LandingPage />} />
-                  <Route path="/auth" element={<AuthPage />} />
-                  <Route path="/login" element={<AuthPage />} />
-                  <Route path="/register" element={<AuthPage />} />
-                  <Route path="/verify-email" element={<EmailVerificationPage />} />
-                  <Route
-                    path="/dashboard"
-                    element={
-                      <ProtectedRoute>
-                        <Layout>
-                          <Dashboard />
-                        </Layout>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/calendar"
-                    element={
-                      <ProtectedRoute>
-                        <Layout>
-                          <CalendarView />
-                        </Layout>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/performance"
-                    element={
-                      <ProtectedRoute>
-                        <Layout>
-                          <Performance />
-                        </Layout>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/settings"
-                    element={
-                      <ProtectedRoute>
-                        <Layout>
-                          <Settings />
-                        </Layout>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </BrowserRouter>
+              <TemplateProvider>
+                <BrowserRouter>
+                  <Routes>
+                    <Route path="/" element={<LandingPage />} />
+                    <Route path="/auth" element={<AuthPage />} />
+                    <Route path="/login" element={<AuthPage />} />
+                    <Route path="/register" element={<AuthPage />} />
+                    <Route path="/verify-email" element={<EmailVerificationPage />} />
+                    <Route
+                      path="/dashboard"
+                      element={
+                        <ProtectedRoute>
+                          <Layout>
+                            <Dashboard />
+                          </Layout>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/templates"
+                      element={
+                        <ProtectedRoute>
+                          <Layout>
+                            <Templates />
+                          </Layout>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/calendar"
+                      element={
+                        <ProtectedRoute>
+                          <Layout>
+                            <CalendarView />
+                          </Layout>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/performance"
+                      element={
+                        <ProtectedRoute>
+                          <Layout>
+                            <Performance />
+                          </Layout>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/settings"
+                      element={
+                        <ProtectedRoute>
+                          <Layout>
+                            <Settings />
+                          </Layout>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </BrowserRouter>
+              </TemplateProvider>
             </BoardProvider>
           </PlanProvider>
         </AuthProvider>
