@@ -4,7 +4,7 @@ import { TaskColumn } from '@/components/TaskColumn';
 import { UserStatsCard } from '@/components/UserStatsCard';
 import { TaskFilter } from '@/components/TaskFilter';
 import { BoardSelector } from '@/components/BoardSelector';
-import { NewTaskModal } from '@/components/NewTaskModal';
+import { TaskEditModal } from '@/components/TaskEditModal';
 import { useTaskStore } from '@/hooks/useTaskStore';
 import { useBoard } from '@/contexts/BoardContext';
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -43,12 +43,39 @@ export const Dashboard = () => {
     addTask(taskWithBoard);
   };
 
+  // Handle task reordering within columns
+  const handleReorderTasks = (draggedTaskId: string, targetTaskId: string, position: 'before' | 'after') => {
+    const draggedTask = filteredTasks.find(t => t.id === draggedTaskId);
+    const targetTask = filteredTasks.find(t => t.id === targetTaskId);
+    
+    if (!draggedTask || !targetTask || draggedTask.status !== targetTask.status) {
+      return;
+    }
+
+    // Create a new array with reordered tasks
+    const columnTasks = filteredTasks
+      .filter(t => t.status === draggedTask.status && t.id !== draggedTaskId)
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+    const targetIndex = columnTasks.findIndex(t => t.id === targetTaskId);
+    const insertIndex = position === 'before' ? targetIndex : targetIndex + 1;
+
+    columnTasks.splice(insertIndex, 0, draggedTask);
+
+    // Update the createdAt timestamps to maintain order
+    columnTasks.forEach((task, index) => {
+      const newCreatedAt = new Date();
+      newCreatedAt.setTime(newCreatedAt.getTime() + index * 1000); // Add seconds to maintain order
+      updateTask(task.id, { createdAt: newCreatedAt });
+    });
+  };
+
   if (!currentBoard) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
-          <h2 className="text-2xl font-bold text-foreground">Nenhum quadro selecionado</h2>
-          <p className="text-muted-foreground">Selecione um quadro para visualizar suas tarefas.</p>
+          <h2 className="text-2xl font-bold text-foreground">No board selected</h2>
+          <p className="text-muted-foreground">Select a board to view your tasks.</p>
         </div>
       </div>
     );
@@ -57,7 +84,7 @@ export const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Modern header */}
-      <header className="bg-card border-b shadow-soft">
+      <header className="bg-card border-b shadow-sm">
         <div className="flex items-center justify-between p-6">
           <div className="flex items-center gap-4">
             <SidebarTrigger className="text-foreground" />
@@ -72,7 +99,7 @@ export const Dashboard = () => {
               className="flex items-center gap-2"
             >
               <Filter className="w-4 h-4" />
-              Filtros
+              Filters
             </Button>
             <Button 
               size="sm" 
@@ -80,7 +107,7 @@ export const Dashboard = () => {
               onClick={() => setShowNewTaskModal(true)}
             >
               <Plus className="w-4 h-4" />
-              Nova Tarefa
+              New Task
             </Button>
           </div>
         </div>
@@ -94,7 +121,7 @@ export const Dashboard = () => {
 
         {/* Task Filter Section */}
         {showFilters && (
-          <div className="animate-slide-up">
+          <div className="animate-fade-in">
             <TaskFilter tasks={boardTasks} onFilterChange={handleFilterChange} />
           </div>
         )}
@@ -109,45 +136,49 @@ export const Dashboard = () => {
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <BarChart3 className="w-4 h-4" />
-            {filteredTasks.length} tarefas
+            {filteredTasks.length} tasks
           </div>
         </div>
 
         {/* Modern Kanban Board */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
           <TaskColumn
-            title="A Fazer"
+            title="To Do"
             status="todo"
             tasks={filteredTasks}
             onUpdateTask={updateTask}
             onDeleteTask={deleteTask}
             onAddTask={handleAddTask}
+            onReorderTasks={handleReorderTasks}
           />
           <TaskColumn
-            title="Fazendo"
+            title="Doing"
             status="doing"
             tasks={filteredTasks}
             onUpdateTask={updateTask}
             onDeleteTask={deleteTask}
             onAddTask={handleAddTask}
+            onReorderTasks={handleReorderTasks}
           />
           <TaskColumn
-            title="Concluído"
+            title="Done"
             status="done"
             tasks={filteredTasks}
             onUpdateTask={updateTask}
             onDeleteTask={deleteTask}
             onAddTask={handleAddTask}
+            onReorderTasks={handleReorderTasks}
           />
         </div>
       </div>
 
       {/* New Task Modal */}
-      <NewTaskModal
+      <TaskEditModal
         isOpen={showNewTaskModal}
         onClose={() => setShowNewTaskModal(false)}
-        onAddTask={handleAddTask}
+        onSaveTask={handleAddTask}
         defaultStatus="todo"
+        mode="create"
       />
     </div>
   );

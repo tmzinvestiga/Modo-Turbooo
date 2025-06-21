@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Task } from '@/types/Task';
-import { Calendar, Clock, RotateCcw, AlertCircle, Tag, Edit2, Trash2, CheckCircle2 } from 'lucide-react';
+import { Calendar, Clock, RotateCcw, AlertCircle, Tag, Edit2, Trash2, CheckCircle2, GripVertical } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,10 +11,12 @@ interface TaskCardProps {
   task: Task;
   onUpdateTask: (taskId: string, updates: Partial<Task>) => void;
   onDeleteTask: (taskId: string) => void;
+  onEditTask: (task: Task) => void;
 }
 
-export const TaskCard = ({ task, onUpdateTask, onDeleteTask }: TaskCardProps) => {
+export const TaskCard = ({ task, onUpdateTask, onDeleteTask, onEditTask }: TaskCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   
   const isTaskOverdue = isPast(task.dueDate) && task.status !== 'done';
   const isDueToday = isToday(task.dueDate);
@@ -31,16 +33,17 @@ export const TaskCard = ({ task, onUpdateTask, onDeleteTask }: TaskCardProps) =>
 
   const getRecurrenceText = () => {
     switch (task.recurrence) {
-      case 'daily': return 'Diária';
-      case 'weekly': return 'Semanal';
-      case 'monthly': return 'Mensal';
-      case 'custom': return 'Personalizada';
+      case 'daily': return 'Daily';
+      case 'weekly': return 'Weekly';
+      case 'monthly': return 'Monthly';
+      case 'custom': return 'Custom';
       default: return null;
     }
   };
 
   const getPriorityColor = () => {
     switch (task.priority) {
+      case 'critical': return 'text-red-600 bg-red-100 dark:bg-red-900/20';
       case 'high': return 'text-red-500 bg-red-100 dark:bg-red-900/20';
       case 'medium': return 'text-yellow-500 bg-yellow-100 dark:bg-yellow-900/20';
       case 'low': return 'text-green-500 bg-green-100 dark:bg-green-900/20';
@@ -50,9 +53,10 @@ export const TaskCard = ({ task, onUpdateTask, onDeleteTask }: TaskCardProps) =>
 
   const getPriorityText = () => {
     switch (task.priority) {
-      case 'high': return 'Alta';
-      case 'medium': return 'Média';
-      case 'low': return 'Baixa';
+      case 'critical': return 'Critical';
+      case 'high': return 'High';
+      case 'medium': return 'Medium';
+      case 'low': return 'Low';
       default: return null;
     }
   };
@@ -72,42 +76,60 @@ export const TaskCard = ({ task, onUpdateTask, onDeleteTask }: TaskCardProps) =>
   };
 
   const getDueDateText = () => {
-    if (isDueToday) return 'Hoje';
-    if (isDueTomorrow) return 'Amanhã';
-    if (isTaskOverdue) return 'Atrasada';
-    return format(task.dueDate, 'dd/MM');
+    if (isDueToday) return 'Today';
+    if (isDueTomorrow) return 'Tomorrow';
+    if (isTaskOverdue) return 'Overdue';
+    return format(task.dueDate, 'MMM dd');
   };
 
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData('text/plain', task.id);
     e.dataTransfer.effectAllowed = 'move';
+    setIsDragging(true);
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
   };
 
   const handleComplete = () => {
     if (task.status !== 'done') {
       onUpdateTask(task.id, { status: 'done' });
       
-      // TODO: Handle recurring tasks when backend is ready
       if (task.recurrence && task.recurrence !== 'none') {
-        // Logic to create new recurring task instance
         console.log('TODO: Create new recurring task instance');
       }
     }
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Prevent edit modal from opening when clicking action buttons
+    if ((e.target as HTMLElement).closest('button')) {
+      return;
+    }
+    onEditTask(task);
+  };
+
   return (
     <Card 
-      className="bg-card border-border hover:border-accent/50 transition-all duration-200 cursor-grab active:cursor-grabbing group hover:shadow-md"
+      className={`bg-card border-border hover:border-accent/50 transition-all duration-200 cursor-pointer group hover:shadow-md ${
+        isDragging ? 'opacity-50 rotate-2 scale-105' : ''
+      } ${isHovered ? 'shadow-lg' : 'shadow-sm'}`}
       draggable
       onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={handleCardClick}
     >
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
-          <h3 className="text-foreground font-medium text-sm leading-tight flex-1 pr-2">
-            {task.title}
-          </h3>
+          <div className="flex items-start gap-2 flex-1">
+            <GripVertical className="w-4 h-4 text-muted-foreground/50 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab" />
+            <h3 className="text-foreground font-medium text-sm leading-tight flex-1 pr-2">
+              {task.title}
+            </h3>
+          </div>
           <div className="flex items-center gap-2">
             <div className={`w-2 h-2 rounded-full ${getStatusColor()}`} />
             {isHovered && (
@@ -116,7 +138,10 @@ export const TaskCard = ({ task, onUpdateTask, onDeleteTask }: TaskCardProps) =>
                   size="sm"
                   variant="ghost"
                   className="h-6 w-6 p-0 hover:bg-blue-100 dark:hover:bg-blue-900/20"
-                  onClick={() => {/* TODO: Open edit modal */}}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEditTask(task);
+                  }}
                 >
                   <Edit2 className="w-3 h-3 text-blue-500" />
                 </Button>
@@ -124,7 +149,10 @@ export const TaskCard = ({ task, onUpdateTask, onDeleteTask }: TaskCardProps) =>
                   size="sm"
                   variant="ghost"
                   className="h-6 w-6 p-0 hover:bg-red-100 dark:hover:bg-red-900/20"
-                  onClick={() => onDeleteTask(task.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteTask(task.id);
+                  }}
                 >
                   <Trash2 className="w-3 h-3 text-red-500" />
                 </Button>
@@ -143,6 +171,12 @@ export const TaskCard = ({ task, onUpdateTask, onDeleteTask }: TaskCardProps) =>
           <div className={`flex items-center gap-1 ${getDueDateColor()}`}>
             <Calendar className="w-3 h-3" />
             <span className="font-medium">{getDueDateText()}</span>
+            {task.dueTime && (
+              <>
+                <Clock className="w-3 h-3 ml-1" />
+                <span>{task.dueTime}</span>
+              </>
+            )}
           </div>
           
           {task.recurrence && task.recurrence !== 'none' && (
@@ -153,7 +187,6 @@ export const TaskCard = ({ task, onUpdateTask, onDeleteTask }: TaskCardProps) =>
           )}
         </div>
 
-        {/* Tags */}
         {task.tags && task.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-3">
             {task.tags.slice(0, 3).map((tag, index) => (
@@ -189,10 +222,13 @@ export const TaskCard = ({ task, onUpdateTask, onDeleteTask }: TaskCardProps) =>
               size="sm"
               variant="ghost"
               className="h-7 px-2 text-xs text-green-600 hover:text-green-700 hover:bg-green-100 dark:hover:bg-green-900/20 transition-all duration-200"
-              onClick={handleComplete}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleComplete();
+              }}
             >
               <CheckCircle2 className="w-3 h-3 mr-1" />
-              Concluir
+              Complete
             </Button>
           )}
         </div>
@@ -201,7 +237,7 @@ export const TaskCard = ({ task, onUpdateTask, onDeleteTask }: TaskCardProps) =>
           <div className="mt-2 flex items-center gap-1">
             <AlertCircle className="w-3 h-3 text-red-500" />
             <span className="text-xs text-red-500 font-medium">
-              Tarefa atrasada
+              Task overdue
             </span>
           </div>
         )}
