@@ -4,6 +4,7 @@ import { TaskColumn } from '@/components/TaskColumn';
 import { UserStatsCard } from '@/components/UserStatsCard';
 import { TaskFilter } from '@/components/TaskFilter';
 import { BoardSelector } from '@/components/BoardSelector';
+import { NewTaskModal } from '@/components/NewTaskModal';
 import { useTaskStore } from '@/hooks/useTaskStore';
 import { useBoard } from '@/contexts/BoardContext';
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -16,6 +17,7 @@ export const Dashboard = () => {
   const { currentBoard } = useBoard();
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [showNewTaskModal, setShowNewTaskModal] = useState(false);
 
   // Filter tasks by current board
   const boardTasks = useMemo(() => {
@@ -72,7 +74,11 @@ export const Dashboard = () => {
               <Filter className="w-4 h-4" />
               Filtros
             </Button>
-            <Button size="sm" className="flex items-center gap-2">
+            <Button 
+              size="sm" 
+              className="flex items-center gap-2"
+              onClick={() => setShowNewTaskModal(true)}
+            >
               <Plus className="w-4 h-4" />
               Nova Tarefa
             </Button>
@@ -135,6 +141,14 @@ export const Dashboard = () => {
           />
         </div>
       </div>
+
+      {/* New Task Modal */}
+      <NewTaskModal
+        isOpen={showNewTaskModal}
+        onClose={() => setShowNewTaskModal(false)}
+        onAddTask={handleAddTask}
+        defaultStatus="todo"
+      />
     </div>
   );
 };
