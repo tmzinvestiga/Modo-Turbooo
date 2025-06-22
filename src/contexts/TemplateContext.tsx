@@ -249,7 +249,17 @@ export const TemplateProvider = ({ children }: TemplateProviderProps) => {
       color: template.color,
     };
 
-    addBoard(boardData);
+    // Extract template columns and tasks
+    const templateColumns = template.columns || [];
+    const templateTasks = templateColumns.flatMap(column => 
+      (column.tasks || []).map(task => ({
+        ...task,
+        status: column.status // Ensure task status matches column status
+      }))
+    );
+
+    // Create the board with template data
+    addBoard(boardData, templateColumns, templateTasks);
     
     // Update usage count
     updateTemplate(templateId, { 

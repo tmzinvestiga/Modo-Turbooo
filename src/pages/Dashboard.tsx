@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { TaskColumn } from '@/components/TaskColumn';
 import { UserStatsCard } from '@/components/UserStatsCard';
@@ -10,8 +9,14 @@ import { useTaskStore } from '@/hooks/useTaskStore';
 import { useBoard } from '@/contexts/BoardContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Task } from '@/types/Task';
-import { BarChart3, Filter, Plus } from 'lucide-react';
+import { BarChart3, Filter, Plus, ChevronDown } from 'lucide-react';
 import { pt } from '@/utils/localization';
 
 interface Column {
@@ -34,6 +39,7 @@ export const Dashboard = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
   const [columns, setColumns] = useState<Column[]>(DEFAULT_COLUMNS);
+  const [showAddColumnHover, setShowAddColumnHover] = useState(false);
 
   // Filter tasks by current board
   const boardTasks = useMemo(() => {
@@ -118,6 +124,18 @@ export const Dashboard = () => {
     setColumns(columns.filter(col => col.id !== columnId));
   };
 
+  const handleQuickAddColumn = () => {
+    const columnTitle = prompt('Digite o título da nova coluna:');
+    if (columnTitle && columnTitle.trim()) {
+      const newColumn: Column = {
+        id: Date.now().toString(),
+        title: columnTitle.trim(),
+        status: 'todo', // Default status
+      };
+      setColumns([...columns, newColumn]);
+    }
+  };
+
   if (!currentBoard) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -139,12 +157,6 @@ export const Dashboard = () => {
           </div>
           
           <div className="flex items-center gap-2 md:gap-3">
-            <ColumnManager
-              columns={columns}
-              onAddColumn={handleAddColumn}
-              onUpdateColumn={handleUpdateColumn}
-              onDeleteColumn={handleDeleteColumn}
-            />
             <Button
               variant="ghost"
               size="sm"
@@ -154,14 +166,26 @@ export const Dashboard = () => {
               <Filter className="w-4 h-4" />
               <span className="hidden sm:inline">{pt.dashboard.filters}</span>
             </Button>
-            <Button 
-              size="sm" 
-              className="flex items-center gap-2"
-              onClick={() => setShowNewTaskModal(true)}
-            >
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">{pt.dashboard.newTask}</span>
-            </Button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" className="flex items-center gap-2">
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Nova</span>
+                  <ChevronDown className="w-3 h-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setShowNewTaskModal(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nova Tarefa
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleQuickAddColumn}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nova Coluna
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
@@ -194,11 +218,15 @@ export const Dashboard = () => {
         </div>
 
         {/* Dynamic Kanban Board */}
-        <div className={`animate-fade-in ${
-          isMobile 
-            ? 'flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory' 
-            : `grid gap-6 ${columns.length <= 3 ? 'grid-cols-1 lg:grid-cols-3' : `grid-cols-1 lg:grid-cols-${Math.min(columns.length, 4)}`}`
-        }`}>
+        <div 
+          className={`animate-fade-in relative ${
+            isMobile 
+              ? 'flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory' 
+              : `grid gap-6 ${columns.length <= 3 ? 'grid-cols-1 lg:grid-cols-3' : `grid-cols-1 lg:grid-cols-${Math.min(columns.length, 4)}`}`
+          }`}
+          onMouseEnter={() => setShowAddColumnHover(true)}
+          onMouseLeave={() => setShowAddColumnHover(false)}
+        >
           {columns.map((column) => (
             <div key={column.id} className={isMobile ? 'flex-shrink-0 w-80 snap-start' : ''}>
               <TaskColumn
@@ -212,6 +240,20 @@ export const Dashboard = () => {
               />
             </div>
           ))}
+          
+          {/* Quick Add Column Button */}
+          {!isMobile && showAddColumnHover && (
+            <div className="flex items-center justify-center">
+              <Button
+                variant="ghost"
+                size="lg"
+                onClick={handleQuickAddColumn}
+                className="h-16 w-16 rounded-full bg-muted/50 hover:bg-muted border-2 border-dashed border-muted-foreground/30 hover:border-muted-foreground/50 transition-all"
+              >
+                <Plus className="w-6 h-6 text-muted-foreground" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
