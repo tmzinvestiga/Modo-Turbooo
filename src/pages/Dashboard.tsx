@@ -1,22 +1,14 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
-import { TaskColumn } from '@/components/TaskColumn';
-import { UserStatsCard } from '@/components/UserStatsCard';
-import { TaskFilter } from '@/components/TaskFilter';
-import { BoardSelector } from '@/components/BoardSelector';
-import { ColumnManager } from '@/components/ColumnManager';
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
+import { DashboardStats } from '@/components/dashboard/DashboardStats';
+import { DashboardFilters } from '@/components/dashboard/DashboardFilters';
+import { BoardInfo } from '@/components/dashboard/BoardInfo';
+import { KanbanBoard } from '@/components/dashboard/KanbanBoard';
 import { TaskEditModal } from '@/components/TaskEditModal';
 import { useTaskStore } from '@/hooks/useTaskStore';
 import { useBoard } from '@/contexts/BoardContext';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Task } from '@/types/Task';
-import { BarChart3, Filter, Plus, ChevronDown } from 'lucide-react';
 import { pt } from '@/utils/localization';
 
 interface Column {
@@ -34,12 +26,10 @@ const DEFAULT_COLUMNS: Column[] = [
 export const Dashboard = () => {
   const { tasks, userStats, addTask, updateTask, deleteTask, getTasksByBoard } = useTaskStore();
   const { currentBoard } = useBoard();
-  const isMobile = useIsMobile();
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
   const [columns, setColumns] = useState<Column[]>(DEFAULT_COLUMNS);
-  const [showAddColumnHover, setShowAddColumnHover] = useState(false);
 
   // Filter tasks by current board
   const boardTasks = useMemo(() => {
@@ -97,33 +87,6 @@ export const Dashboard = () => {
     });
   };
 
-  // Column management functions
-  const handleAddColumn = (column: Omit<Column, 'id'>) => {
-    const newColumn: Column = {
-      ...column,
-      id: Date.now().toString(),
-    };
-    setColumns([...columns, newColumn]);
-  };
-
-  const handleUpdateColumn = (columnId: string, updates: Partial<Column>) => {
-    setColumns(columns.map(col => 
-      col.id === columnId ? { ...col, ...updates } : col
-    ));
-  };
-
-  const handleDeleteColumn = (columnId: string) => {
-    if (columns.length <= 1) return;
-    
-    // Move all tasks from deleted column to 'todo'
-    const columnTasks = filteredTasks.filter(task => task.status === columns.find(c => c.id === columnId)?.status);
-    columnTasks.forEach(task => {
-      updateTask(task.id, { status: 'todo' });
-    });
-    
-    setColumns(columns.filter(col => col.id !== columnId));
-  };
-
   const handleQuickAddColumn = () => {
     const columnTitle = prompt('Digite o título da nova coluna:');
     if (columnTitle && columnTitle.trim()) {
@@ -149,112 +112,38 @@ export const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Secondary header */}
-      <div className="bg-card border-b shadow-sm">
-        <div className="flex items-center justify-between p-4 md:p-6">
-          <div className="flex items-center gap-4">
-            <BoardSelector />
-          </div>
-          
-          <div className="flex items-center gap-2 md:gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2"
-            >
-              <Filter className="w-4 h-4" />
-              <span className="hidden sm:inline">{pt.dashboard.filters}</span>
-            </Button>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="sm" className="flex items-center gap-2">
-                  <Plus className="w-4 h-4" />
-                  <span className="hidden sm:inline">Nova</span>
-                  <ChevronDown className="w-3 h-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setShowNewTaskModal(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Nova Tarefa
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleQuickAddColumn}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Nova Coluna
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </div>
+      {/* Header */}
+      <DashboardHeader
+        showFilters={showFilters}
+        onToggleFilters={() => setShowFilters(!showFilters)}
+        onNewTask={() => setShowNewTaskModal(true)}
+        onQuickAddColumn={handleQuickAddColumn}
+      />
 
-      <div className={`p-4 md:p-6 max-w-7xl mx-auto space-y-4 md:space-y-6 ${isMobile ? '' : ''}`}>
+      <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-4 md:space-y-6">
         {/* Performance Section */}
-        <div className="animate-fade-in">
-          <UserStatsCard stats={userStats} />
-        </div>
+        <DashboardStats stats={userStats} />
 
         {/* Task Filter Section */}
-        {showFilters && (
-          <div className="animate-fade-in">
-            <TaskFilter tasks={boardTasks} onFilterChange={handleFilterChange} />
-          </div>
-        )}
+        <DashboardFilters
+          tasks={boardTasks}
+          onFilterChange={handleFilterChange}
+          isVisible={showFilters}
+        />
 
         {/* Board Info */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl md:text-2xl font-bold text-foreground">{currentBoard.name}</h1>
-            {currentBoard.description && (
-              <p className="text-muted-foreground mt-1 text-sm md:text-base">{currentBoard.description}</p>
-            )}
-          </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <BarChart3 className="w-4 h-4" />
-            {filteredTasks.length} {pt.dashboard.tasks}
-          </div>
-        </div>
+        <BoardInfo board={currentBoard} taskCount={filteredTasks.length} />
 
-        {/* Dynamic Kanban Board */}
-        <div 
-          className={`animate-fade-in relative ${
-            isMobile 
-              ? 'flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory' 
-              : `grid gap-6 ${columns.length <= 3 ? 'grid-cols-1 lg:grid-cols-3' : `grid-cols-1 lg:grid-cols-${Math.min(columns.length, 4)}`}`
-          }`}
-          onMouseEnter={() => setShowAddColumnHover(true)}
-          onMouseLeave={() => setShowAddColumnHover(false)}
-        >
-          {columns.map((column) => (
-            <div key={column.id} className={isMobile ? 'flex-shrink-0 w-80 snap-start' : ''}>
-              <TaskColumn
-                title={column.title}
-                status={column.status}
-                tasks={filteredTasks}
-                onUpdateTask={updateTask}
-                onDeleteTask={deleteTask}
-                onAddTask={handleAddTask}
-                onReorderTasks={handleReorderTasks}
-              />
-            </div>
-          ))}
-          
-          {/* Quick Add Column Button */}
-          {!isMobile && showAddColumnHover && (
-            <div className="flex items-center justify-center">
-              <Button
-                variant="ghost"
-                size="lg"
-                onClick={handleQuickAddColumn}
-                className="h-16 w-16 rounded-full bg-muted/50 hover:bg-muted border-2 border-dashed border-muted-foreground/30 hover:border-muted-foreground/50 transition-all"
-              >
-                <Plus className="w-6 h-6 text-muted-foreground" />
-              </Button>
-            </div>
-          )}
-        </div>
+        {/* Kanban Board */}
+        <KanbanBoard
+          columns={columns}
+          tasks={filteredTasks}
+          onUpdateTask={updateTask}
+          onDeleteTask={deleteTask}
+          onAddTask={handleAddTask}
+          onReorderTasks={handleReorderTasks}
+          onQuickAddColumn={handleQuickAddColumn}
+        />
       </div>
 
       {/* New Task Modal */}
