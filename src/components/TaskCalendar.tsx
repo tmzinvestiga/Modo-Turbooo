@@ -2,8 +2,8 @@
 import React, { useState, useMemo } from 'react';
 import { useTaskStore } from '@/hooks/useTaskStore';
 import { useBoard } from '@/contexts/BoardContext';
-import { format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isToday, addMonths, subMonths } from 'date-fns';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Grid, List, Filter } from 'lucide-react';
+import { format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isToday, addMonths, subMonths, startOfWeek, endOfWeek, addDays, startOfDay, endOfDay } from 'date-fns';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Task } from '@/types/Task';
@@ -19,11 +19,13 @@ interface TaskCalendarProps {
   onDayClick: (date: Date, tasks: Task[]) => void;
 }
 
+type ViewMode = 'today' | 'day' | 'week' | 'month';
+
 export const TaskCalendar = ({ onDayClick }: TaskCalendarProps) => {
   const { getTasksByBoard } = useTaskStore();
   const { currentBoard } = useBoard();
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('month');
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [viewMode, setViewMode] = useState<ViewMode>('month');
 
   // Get tasks for the current board
   const boardTasks = useMemo(() => {
@@ -35,26 +37,26 @@ export const TaskCalendar = ({ onDayClick }: TaskCalendarProps) => {
     return boardTasks.filter(task => isSameDay(task.dueDate, date));
   };
 
-  const monthStart = startOfMonth(currentMonth);
-  const monthEnd = endOfMonth(currentMonth);
-  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
-  
-  // Add days from previous month to fill the first week
-  const startDate = new Date(monthStart);
-  startDate.setDate(startDate.getDate() - getDay(monthStart));
-  
-  // Add days from next month to fill the last week
-  const endDate = new Date(monthEnd);
-  endDate.setDate(endDate.getDate() + (6 - getDay(monthEnd)));
-  
-  const calendarDays = eachDayOfInterval({ start: startDate, end: endDate });
-
-  const navigateMonth = (direction: 'prev' | 'next') => {
-    setCurrentMonth(direction === 'next' ? addMonths(currentMonth, 1) : subMonths(currentMonth, 1));
+  const navigate = (direction: 'prev' | 'next') => {
+    if (viewMode === 'month') {
+      setCurrentDate(direction === 'next' ? addMonths(currentDate, 1) : subMonths(currentDate, 1));
+    } else if (viewMode === 'week') {
+      setCurrentDate(direction === 'next' ? addDays(currentDate, 7) : addDays(currentDate, -7));
+    } else {
+      setCurrentDate(direction === 'next' ? addDays(currentDate, 1) : addDays(currentDate, -1));
+    }
   };
 
   const goToToday = () => {
-    setCurrentMonth(new Date());
+    setCurrentDate(new Date());
+    setViewMode('today');
+  };
+
+  const handleViewModeChange = (mode: ViewMode) => {
+    setViewMode(mode);
+    if (mode === 'today') {
+      setCurrentDate(new Date());
+    }
   };
 
   const getTaskStatusColor = (status: string) => {
@@ -76,80 +78,183 @@ export const TaskCalendar = ({ onDayClick }: TaskCalendarProps) => {
     }
   };
 
-  return (
-    <div className="bg-card border rounded-xl shadow-soft overflow-hidden">
-      {/* Modern Calendar Header */}
-      <div className="flex items-center justify-between p-6 border-b bg-slate-50/50">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigateMonth('prev')}
-              className="h-8 w-8 p-0 hover:bg-white"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            
-            <h2 className="text-xl font-semibold text-foreground min-w-[200px] text-center">
-              {format(currentMonth, 'MMMM yyyy')}
-            </h2>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigateMonth('next')}
-              className="h-8 w-8 p-0 hover:bg-white"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={goToToday}
-            className="font-medium"
-          >
-            Hoje
-          </Button>
+  const renderTodayView = () => {
+    const todayTasks = getTasksForDate(currentDate);
+    const todoTasks = todayTasks.filter(t => t.status === 'todo');
+    const doingTasks = todayTasks.filter(t => t.status === 'doing');
+    const doneTasks = todayTasks.filter(t => t.status === 'done');
+
+    return (
+      <div className="p-6 space-y-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-foreground">
+            {format(currentDate, 'EEEE, dd MMMM yyyy')}
+          </h2>
+          <p className="text-muted-foreground mt-1">
+            {todayTasks.length} tarefas agendadas para hoje
+          </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Select value={viewMode} onValueChange={(value) => setViewMode(value as 'day' | 'week' | 'month')}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="day">
-                <div className="flex items-center gap-2">
-                  <CalendarIcon className="w-4 h-4" />
-                  Dia
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-slate-500"></div>
+              <h3 className="font-semibold">A Fazer ({todoTasks.length})</h3>
+            </div>
+            <div className="space-y-2">
+              {todoTasks.map(task => (
+                <div key={task.id} className={`p-3 rounded border ${getTaskStatusColor(task.status)} ${getPriorityIndicator(task.priority)}`}>
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">{task.title}</span>
+                    {task.dueTime && (
+                      <Badge variant="outline" className="text-xs">
+                        <Clock className="w-3 h-3 mr-1" />
+                        {task.dueTime}
+                      </Badge>
+                    )}
+                  </div>
+                  {task.description && (
+                    <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
+                  )}
                 </div>
-              </SelectItem>
-              <SelectItem value="week">
-                <div className="flex items-center gap-2">
-                  <List className="w-4 h-4" />
-                  Semana
-                </div>
-              </SelectItem>
-              <SelectItem value="month">
-                <div className="flex items-center gap-2">
-                  <Grid className="w-4 h-4" />
-                  Mês
-                </div>
-              </SelectItem>
-            </SelectContent>
-          </Select>
+              ))}
+              {todoTasks.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">Nenhuma tarefa para fazer</p>
+              )}
+            </div>
+          </div>
 
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <CalendarIcon className="w-4 h-4" />
-            {currentBoard?.name || 'Nenhum quadro selecionado'}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+              <h3 className="font-semibold">Fazendo ({doingTasks.length})</h3>
+            </div>
+            <div className="space-y-2">
+              {doingTasks.map(task => (
+                <div key={task.id} className={`p-3 rounded border ${getTaskStatusColor(task.status)} ${getPriorityIndicator(task.priority)}`}>
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">{task.title}</span>
+                    {task.dueTime && (
+                      <Badge variant="outline" className="text-xs">
+                        <Clock className="w-3 h-3 mr-1" />
+                        {task.dueTime}
+                      </Badge>
+                    )}
+                  </div>
+                  {task.description && (
+                    <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
+                  )}
+                </div>
+              ))}
+              {doingTasks.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">Nenhuma tarefa em andamento</p>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+              <h3 className="font-semibold">Concluído ({doneTasks.length})</h3>
+            </div>
+            <div className="space-y-2">
+              {doneTasks.map(task => (
+                <div key={task.id} className={`p-3 rounded border ${getTaskStatusColor(task.status)} ${getPriorityIndicator(task.priority)}`}>
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">{task.title}</span>
+                    {task.dueTime && (
+                      <Badge variant="outline" className="text-xs">
+                        <Clock className="w-3 h-3 mr-1" />
+                        {task.dueTime}
+                      </Badge>
+                    )}
+                  </div>
+                  {task.description && (
+                    <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
+                  )}
+                </div>
+              ))}
+              {doneTasks.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">Nenhuma tarefa concluída</p>
+              )}
+            </div>
           </div>
         </div>
       </div>
+    );
+  };
 
-      {/* Calendar Grid */}
+  const renderWeekView = () => {
+    const weekStart = startOfWeek(currentDate);
+    const weekEnd = endOfWeek(currentDate);
+    const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
+
+    return (
+      <div className="p-6">
+        <div className="grid grid-cols-7 gap-4">
+          {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((day, index) => (
+            <div key={day} className="text-center text-sm font-medium text-muted-foreground py-2 border-b">
+              {day}
+            </div>
+          ))}
+          
+          {weekDays.map((day) => {
+            const dayTasks = getTasksForDate(day);
+            const isCurrentDay = isToday(day);
+            
+            return (
+              <div
+                key={day.toISOString()}
+                className={`min-h-[150px] p-3 border rounded-lg cursor-pointer transition-all hover:bg-accent/50 ${
+                  isCurrentDay ? 'bg-primary/5 border-primary/20' : 'bg-card'
+                }`}
+                onClick={() => onDayClick(day, dayTasks)}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className={`text-sm font-medium ${
+                    isCurrentDay ? 'bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-xs' : ''
+                  }`}>
+                    {format(day, 'd')}
+                  </span>
+                  {dayTasks.length > 0 && (
+                    <Badge variant="secondary" className="text-xs h-5 px-1.5">
+                      {dayTasks.length}
+                    </Badge>
+                  )}
+                </div>
+                
+                <div className="space-y-1">
+                  {dayTasks.slice(0, 3).map((task) => (
+                    <div
+                      key={task.id}
+                      className={`text-xs px-2 py-1 rounded border ${getTaskStatusColor(task.status)} ${getPriorityIndicator(task.priority)}`}
+                      title={`${task.title} - ${task.status}`}
+                    >
+                      <span className="truncate block">{task.title}</span>
+                    </div>
+                  ))}
+                  {dayTasks.length > 3 && (
+                    <div className="text-xs text-muted-foreground text-center py-1">
+                      +{dayTasks.length - 3} mais
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const renderMonthView = () => {
+    const monthStart = startOfMonth(currentDate);
+    const monthEnd = endOfMonth(currentDate);
+    const startDate = startOfWeek(monthStart);
+    const endDate = endOfWeek(monthEnd);
+    const calendarDays = eachDayOfInterval({ start: startDate, end: endDate });
+
+    return (
       <div className="p-6">
         {/* Weekday Headers */}
         <div className="grid grid-cols-7 gap-px mb-2">
@@ -162,9 +267,9 @@ export const TaskCalendar = ({ onDayClick }: TaskCalendarProps) => {
 
         {/* Calendar Days Grid */}
         <div className="grid grid-cols-7 gap-px bg-border rounded-lg overflow-hidden">
-          {calendarDays.map((day, index) => {
+          {calendarDays.map((day) => {
             const dayTasks = getTasksForDate(day);
-            const isCurrentMonth = day.getMonth() === currentMonth.getMonth();
+            const isCurrentMonth = day.getMonth() === currentDate.getMonth();
             const isCurrentDay = isToday(day);
 
             return (
@@ -227,6 +332,79 @@ export const TaskCalendar = ({ onDayClick }: TaskCalendarProps) => {
           })}
         </div>
       </div>
+    );
+  };
+
+  const getViewTitle = () => {
+    switch (viewMode) {
+      case 'today':
+        return format(currentDate, 'dd MMMM yyyy');
+      case 'day':
+        return format(currentDate, 'EEEE, dd MMMM yyyy');
+      case 'week':
+        return `${format(startOfWeek(currentDate), 'dd MMM')} - ${format(endOfWeek(currentDate), 'dd MMM yyyy')}`;
+      case 'month':
+        return format(currentDate, 'MMMM yyyy');
+      default:
+        return format(currentDate, 'MMMM yyyy');
+    }
+  };
+
+  return (
+    <div className="bg-card border rounded-xl shadow-soft overflow-hidden">
+      {/* Calendar Header */}
+      <div className="flex items-center justify-between p-6 border-b bg-slate-50/50">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('prev')}
+              className="h-8 w-8 p-0 hover:bg-white"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            
+            <h2 className="text-xl font-semibold text-foreground min-w-[200px] text-center">
+              {getViewTitle()}
+            </h2>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('next')}
+              className="h-8 w-8 p-0 hover:bg-white"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Select value={viewMode} onValueChange={handleViewModeChange}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="today">Hoje</SelectItem>
+              <SelectItem value="day">Dia</SelectItem>
+              <SelectItem value="week">Semana</SelectItem>
+              <SelectItem value="month">Mês</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <CalendarIcon className="w-4 h-4" />
+            {currentBoard?.name || 'Nenhum quadro selecionado'}
+          </div>
+        </div>
+      </div>
+
+      {/* Calendar Content */}
+      {viewMode === 'today' && renderTodayView()}
+      {viewMode === 'day' && renderTodayView()}
+      {viewMode === 'week' && renderWeekView()}
+      {viewMode === 'month' && renderMonthView()}
 
       {/* Legend */}
       <div className="flex items-center justify-center gap-6 p-4 border-t bg-slate-50/30">

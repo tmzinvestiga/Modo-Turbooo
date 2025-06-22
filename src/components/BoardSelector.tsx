@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { useBoard } from '@/contexts/BoardContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,20 +16,32 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ChevronDown, Plus, Edit2, Trash2, Folder, Heart, Settings } from 'lucide-react';
+import { ChevronDown, Plus, Edit2, Trash2, Folder, Heart } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const BoardSelector = () => {
   const { boards, currentBoard, addBoard, updateBoard, deleteBoard, setCurrentBoard } = useBoard();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isMultiSelectOpen, setIsMultiSelectOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingBoard, setEditingBoard] = useState<any>(null);
   const [newBoardName, setNewBoardName] = useState('');
   const [newBoardDescription, setNewBoardDescription] = useState('');
   const [selectedColor, setSelectedColor] = useState('#4F46E5');
-  const [selectedBoards, setSelectedBoards] = useState<string[]>([]);
   const [favoriteBoards, setFavoriteBoards] = useState<string[]>([]);
 
   const colors = [
@@ -74,6 +85,34 @@ export const BoardSelector = () => {
     toast.success('Quadro criado com sucesso!');
   };
 
+  const handleEditBoard = (board: any) => {
+    setEditingBoard(board);
+    setNewBoardName(board.name);
+    setNewBoardDescription(board.description || '');
+    setSelectedColor(board.color);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateBoard = () => {
+    if (!newBoardName.trim()) {
+      toast.error('Nome do quadro é obrigatório');
+      return;
+    }
+
+    updateBoard(editingBoard.id, {
+      name: newBoardName.trim(),
+      description: newBoardDescription.trim(),
+      color: selectedColor,
+    });
+
+    setIsEditDialogOpen(false);
+    setEditingBoard(null);
+    setNewBoardName('');
+    setNewBoardDescription('');
+    setSelectedColor('#4F46E5');
+    toast.success('Quadro atualizado com sucesso!');
+  };
+
   const handleDeleteBoard = (boardId: string) => {
     const board = boards.find(b => b.id === boardId);
     if (board?.isDefault) {
@@ -82,6 +121,15 @@ export const BoardSelector = () => {
     }
     
     deleteBoard(boardId);
+    
+    // If we deleted the current board, switch to the first available board
+    if (currentBoard?.id === boardId) {
+      const remainingBoards = boards.filter(b => b.id !== boardId);
+      if (remainingBoards.length > 0) {
+        setCurrentBoard(remainingBoards[0].id);
+      }
+    }
+    
     toast.success('Quadro excluído com sucesso!');
   };
 
@@ -92,19 +140,6 @@ export const BoardSelector = () => {
     
     setFavoriteBoards(newFavorites);
     localStorage.setItem('favorite-boards', JSON.stringify(newFavorites));
-  };
-
-  const handleMultiSelect = () => {
-    if (selectedBoards.length === 0) {
-      toast.error('Selecione pelo menos um quadro');
-      return;
-    }
-    
-    // For now, we'll just switch to the first selected board
-    // In a full implementation, this would show a combined view
-    setCurrentBoard(selectedBoards[0]);
-    setIsMultiSelectOpen(false);
-    toast.success(`Visualizando ${selectedBoards.length} quadro(s)`);
   };
 
   React.useEffect(() => {
@@ -127,38 +162,39 @@ export const BoardSelector = () => {
             <ChevronDown className="w-4 h-4 text-muted-foreground" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-64">
+        <DropdownMenuContent align="start" className="w-80">
           {sortedBoards.map((board) => (
             <DropdownMenuItem
               key={board.id}
               onClick={() => setCurrentBoard(board.id)}
-              className="flex items-center justify-between group"
+              className="flex items-center justify-between group p-3"
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3 flex-1">
                 <div 
-                  className="w-3 h-3 rounded-full" 
+                  className="w-4 h-4 rounded-full flex-shrink-0" 
                   style={{ backgroundColor: board.color }}
                 />
-                <div>
-                  <div className="flex items-center gap-1">
-                    <span className="font-medium">{board.name}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium truncate">{board.name}</span>
                     {favoriteBoards.includes(board.id) && (
-                      <Heart className="w-3 h-3 text-red-500 fill-current" />
+                      <Heart className="w-3 h-3 text-red-500 fill-current flex-shrink-0" />
+                    )}
+                    {currentBoard?.id === board.id && (
+                      <Badge variant="secondary" className="text-xs">Atual</Badge>
                     )}
                   </div>
                   {board.description && (
-                    <div className="text-xs text-muted-foreground">{board.description}</div>
+                    <div className="text-xs text-muted-foreground truncate">{board.description}</div>
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-1">
-                {currentBoard?.id === board.id && (
-                  <Badge variant="secondary" className="text-xs">Atual</Badge>
-                )}
+              
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0"
+                  className="h-6 w-6 p-0"
                   onClick={(e) => {
                     e.stopPropagation();
                     toggleFavoriteBoard(board.id);
@@ -166,64 +202,55 @@ export const BoardSelector = () => {
                 >
                   <Heart className={`w-3 h-3 ${favoriteBoards.includes(board.id) ? 'text-red-500 fill-current' : 'text-muted-foreground'}`} />
                 </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEditBoard(board);
+                  }}
+                >
+                  <Edit2 className="w-3 h-3 text-muted-foreground" />
+                </Button>
+                
+                {!board.isDefault && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Trash2 className="w-3 h-3 text-red-500" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Excluir Quadro</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Tem certeza que deseja excluir o quadro "{board.name}"? Esta ação não pode ser desfeita.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={() => handleDeleteBoard(board.id)}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          Excluir
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
               </div>
             </DropdownMenuItem>
           ))}
-          <DropdownMenuSeparator />
           
-          <Dialog open={isMultiSelectOpen} onOpenChange={setIsMultiSelectOpen}>
-            <DialogTrigger asChild>
-              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                <Settings className="w-4 h-4 mr-2" />
-                Seleção Múltipla
-              </DropdownMenuItem>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Selecionar Múltiplos Quadros</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Selecione os quadros que deseja visualizar juntos:
-                </p>
-                <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {boards.map((board) => (
-                    <div key={board.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={board.id}
-                        checked={selectedBoards.includes(board.id)}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setSelectedBoards([...selectedBoards, board.id]);
-                          } else {
-                            setSelectedBoards(selectedBoards.filter(id => id !== board.id));
-                          }
-                        }}
-                      />
-                      <label htmlFor={board.id} className="flex items-center gap-2 flex-1">
-                        <div 
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: board.color }}
-                        />
-                        <span className="text-sm">{board.name}</span>
-                        {favoriteBoards.includes(board.id) && (
-                          <Heart className="w-3 h-3 text-red-500 fill-current" />
-                        )}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => setIsMultiSelectOpen(false)} className="flex-1">
-                    Cancelar
-                  </Button>
-                  <Button onClick={handleMultiSelect} className="flex-1">
-                    Aplicar Seleção
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <DropdownMenuSeparator />
           
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
@@ -275,20 +302,77 @@ export const BoardSelector = () => {
                     ))}
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="flex-1">
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                     Cancelar
                   </Button>
-                  <Button onClick={handleAddBoard} className="flex-1">
+                  <Button onClick={handleAddBoard}>
                     <Folder className="w-4 h-4 mr-2" />
                     Criar Quadro
                   </Button>
-                </div>
+                </DialogFooter>
               </div>
             </DialogContent>
           </Dialog>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* Edit Board Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar Quadro</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="editBoardName">Nome do Quadro</Label>
+              <Input
+                id="editBoardName"
+                value={newBoardName}
+                onChange={(e) => setNewBoardName(e.target.value)}
+                placeholder="Nome do quadro"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="editBoardDescription">Descrição (opcional)</Label>
+              <Input
+                id="editBoardDescription"
+                value={newBoardDescription}
+                onChange={(e) => setNewBoardDescription(e.target.value)}
+                placeholder="Descrição do quadro"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label>Cor do Quadro</Label>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {colors.map((color) => (
+                  <button
+                    key={color.value}
+                    onClick={() => setSelectedColor(color.value)}
+                    className={`w-8 h-8 rounded-full border-2 transition-all ${
+                      selectedColor === color.value 
+                        ? 'border-foreground scale-110' 
+                        : 'border-transparent hover:scale-105'
+                    }`}
+                    style={{ backgroundColor: color.value }}
+                    title={color.name}
+                  />
+                ))}
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleUpdateBoard}>
+                Salvar Alterações
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

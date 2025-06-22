@@ -4,6 +4,7 @@ import { TaskColumn } from '@/components/TaskColumn';
 import { UserStatsCard } from '@/components/UserStatsCard';
 import { TaskFilter } from '@/components/TaskFilter';
 import { BoardSelector } from '@/components/BoardSelector';
+import { ColumnManager } from '@/components/ColumnManager';
 import { TaskEditModal } from '@/components/TaskEditModal';
 import { useTaskStore } from '@/hooks/useTaskStore';
 import { useBoard } from '@/contexts/BoardContext';
@@ -13,6 +14,18 @@ import { Task } from '@/types/Task';
 import { BarChart3, Filter, Plus } from 'lucide-react';
 import { pt } from '@/utils/localization';
 
+interface Column {
+  id: string;
+  title: string;
+  status: 'todo' | 'doing' | 'done';
+}
+
+const DEFAULT_COLUMNS: Column[] = [
+  { id: 'todo', title: 'A Fazer', status: 'todo' },
+  { id: 'doing', title: 'Fazendo', status: 'doing' },
+  { id: 'done', title: 'Concluído', status: 'done' },
+];
+
 export const Dashboard = () => {
   const { tasks, userStats, addTask, updateTask, deleteTask, getTasksByBoard } = useTaskStore();
   const { currentBoard } = useBoard();
@@ -20,6 +33,7 @@ export const Dashboard = () => {
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+  const [columns, setColumns] = useState<Column[]>(DEFAULT_COLUMNS);
 
   // Filter tasks by current board
   const boardTasks = useMemo(() => {
@@ -77,6 +91,33 @@ export const Dashboard = () => {
     });
   };
 
+  // Column management functions
+  const handleAddColumn = (column: Omit<Column, 'id'>) => {
+    const newColumn: Column = {
+      ...column,
+      id: Date.now().toString(),
+    };
+    setColumns([...columns, newColumn]);
+  };
+
+  const handleUpdateColumn = (columnId: string, updates: Partial<Column>) => {
+    setColumns(columns.map(col => 
+      col.id === columnId ? { ...col, ...updates } : col
+    ));
+  };
+
+  const handleDeleteColumn = (columnId: string) => {
+    if (columns.length <= 1) return;
+    
+    // Move all tasks from deleted column to 'todo'
+    const columnTasks = filteredTasks.filter(task => task.status === columns.find(c => c.id === columnId)?.status);
+    columnTasks.forEach(task => {
+      updateTask(task.id, { status: 'todo' });
+    });
+    
+    setColumns(columns.filter(col => col.id !== columnId));
+  };
+
   if (!currentBoard) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -98,6 +139,12 @@ export const Dashboard = () => {
           </div>
           
           <div className="flex items-center gap-2 md:gap-3">
+            <ColumnManager
+              columns={columns}
+              onAddColumn={handleAddColumn}
+              onUpdateColumn={handleUpdateColumn}
+              onDeleteColumn={handleDeleteColumn}
+            />
             <Button
               variant="ghost"
               size="sm"
@@ -146,47 +193,25 @@ export const Dashboard = () => {
           </div>
         </div>
 
-        {/* Modern Kanban Board - Mobile Horizontal, Desktop Grid */}
+        {/* Dynamic Kanban Board */}
         <div className={`animate-fade-in ${
           isMobile 
             ? 'flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory' 
-            : 'grid grid-cols-1 lg:grid-cols-3 gap-6'
+            : `grid gap-6 ${columns.length <= 3 ? 'grid-cols-1 lg:grid-cols-3' : `grid-cols-1 lg:grid-cols-${Math.min(columns.length, 4)}`}`
         }`}>
-          <div className={isMobile ? 'flex-shrink-0 w-80 snap-start' : ''}>
-            <TaskColumn
-              title={pt.columns.todo}
-              status="todo"
-              tasks={filteredTasks}
-              onUpdateTask={updateTask}
-              onDeleteTask={deleteTask}
-              onAddTask={handleAddTask}
-              onReorderTasks={handleReorderTasks}
-            />
-          </div>
-          
-          <div className={isMobile ? 'flex-shrink-0 w-80 snap-start' : ''}>
-            <TaskColumn
-              title={pt.columns.doing}
-              status="doing"
-              tasks={filteredTasks}
-              onUpdateTask={updateTask}
-              onDeleteTask={deleteTask}
-              onAddTask={handleAddTask}
-              onReorderTasks={handleReorderTasks}
-            />
-          </div>
-          
-          <div className={isMobile ? 'flex-shrink-0 w-80 snap-start' : ''}>
-            <TaskColumn
-              title={pt.columns.done}
-              status="done"
-              tasks={filteredTasks}
-              onUpdateTask={updateTask}
-              onDeleteTask={deleteTask}
-              onAddTask={handleAddTask}
-              onReorderTasks={handleReorderTasks}
-            />
-          </div>
+          {columns.map((column) => (
+            <div key={column.id} className={isMobile ? 'flex-shrink-0 w-80 snap-start' : ''}>
+              <TaskColumn
+                title={column.title}
+                status={column.status}
+                tasks={filteredTasks}
+                onUpdateTask={updateTask}
+                onDeleteTask={deleteTask}
+                onAddTask={handleAddTask}
+                onReorderTasks={handleReorderTasks}
+              />
+            </div>
+          ))}
         </div>
       </div>
 
