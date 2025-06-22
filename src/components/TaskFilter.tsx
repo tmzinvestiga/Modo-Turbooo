@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -177,8 +176,8 @@ export const TaskFilter = ({ tasks, onFilterChange }: TaskFilterProps) => {
   };
 
   const updateSort = (field: string) => {
-    const newDirection = sort.field === field && sort.direction === 'asc' ? 'desc' : 'asc';
-    const newSort = { field, direction: newDirection };
+    const newDirection: 'asc' | 'desc' = sort.field === field && sort.direction === 'asc' ? 'desc' : 'asc';
+    const newSort: SortState = { field, direction: newDirection };
     setSort(newSort);
     applyFiltersAndSort(filters, newSort);
   };

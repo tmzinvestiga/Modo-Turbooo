@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Task } from '@/types/Task';
 import { Calendar, Clock, RotateCcw, AlertCircle, Tag, Edit2, Trash2, CheckCircle2, GripVertical } from 'lucide-react';
@@ -15,6 +14,7 @@ interface TaskCardProps {
   onEditTask: (task: Task) => void;
   isMobile?: boolean;
   isDraggingMobile?: boolean;
+  onDragStart?: (e: React.DragEvent, taskId: string) => void;
 }
 
 export const TaskCard = ({ 
@@ -23,7 +23,8 @@ export const TaskCard = ({
   onDeleteTask, 
   onEditTask, 
   isMobile = false,
-  isDraggingMobile = false 
+  isDraggingMobile = false,
+  onDragStart
 }: TaskCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -99,8 +100,12 @@ export const TaskCard = ({
   };
 
   const handleDragStart = (e: React.DragEvent) => {
-    e.dataTransfer.setData('text/plain', task.id);
-    e.dataTransfer.effectAllowed = 'move';
+    if (onDragStart) {
+      onDragStart(e, task.id);
+    } else {
+      e.dataTransfer.setData('text/plain', task.id);
+      e.dataTransfer.effectAllowed = 'move';
+    }
     setIsDragging(true);
   };
 
