@@ -8,7 +8,6 @@ import { TaskEditModal } from '@/components/TaskEditModal';
 import { useTaskStore } from '@/hooks/useTaskStore';
 import { useBoard } from '@/contexts/BoardContext';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Task } from '@/types/Task';
 import { BarChart3, Filter, Plus } from 'lucide-react';
@@ -91,11 +90,10 @@ export const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Modern header */}
-      <header className="bg-card border-b shadow-sm">
+      {/* Secondary header */}
+      <div className="bg-card border-b shadow-sm">
         <div className="flex items-center justify-between p-4 md:p-6">
           <div className="flex items-center gap-4">
-            <SidebarTrigger className="text-foreground" />
             <BoardSelector />
           </div>
           
@@ -119,7 +117,7 @@ export const Dashboard = () => {
             </Button>
           </div>
         </div>
-      </header>
+      </div>
 
       <div className={`p-4 md:p-6 max-w-7xl mx-auto space-y-4 md:space-y-6 ${isMobile ? '' : ''}`}>
         {/* Performance Section */}

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTaskStore } from '@/hooks/useTaskStore';
 import { useBoard } from '@/contexts/BoardContext';
 import { format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isToday, addMonths, subMonths } from 'date-fns';
@@ -20,13 +20,19 @@ interface TaskCalendarProps {
 }
 
 export const TaskCalendar = ({ onDayClick }: TaskCalendarProps) => {
-  const { tasks } = useTaskStore();
+  const { getTasksByBoard } = useTaskStore();
   const { currentBoard } = useBoard();
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [viewMode, setViewMode] = useState<'month' | 'week'>('month');
+  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('month');
+
+  // Get tasks for the current board
+  const boardTasks = useMemo(() => {
+    if (!currentBoard) return [];
+    return getTasksByBoard(currentBoard.id);
+  }, [currentBoard, getTasksByBoard]);
 
   const getTasksForDate = (date: Date) => {
-    return tasks.filter(task => isSameDay(task.dueDate, date));
+    return boardTasks.filter(task => isSameDay(task.dueDate, date));
   };
 
   const monthStart = startOfMonth(currentMonth);
@@ -47,6 +53,10 @@ export const TaskCalendar = ({ onDayClick }: TaskCalendarProps) => {
     setCurrentMonth(direction === 'next' ? addMonths(currentMonth, 1) : subMonths(currentMonth, 1));
   };
 
+  const goToToday = () => {
+    setCurrentMonth(new Date());
+  };
+
   const getTaskStatusColor = (status: string) => {
     switch (status) {
       case 'todo': return 'bg-slate-100 text-slate-700 border-slate-200';
@@ -58,6 +68,7 @@ export const TaskCalendar = ({ onDayClick }: TaskCalendarProps) => {
 
   const getPriorityIndicator = (priority?: string) => {
     switch (priority) {
+      case 'critical': return 'border-l-4 border-l-red-600';
       case 'high': return 'border-l-4 border-l-red-500';
       case 'medium': return 'border-l-4 border-l-amber-500';
       case 'low': return 'border-l-4 border-l-green-500';
@@ -97,7 +108,7 @@ export const TaskCalendar = ({ onDayClick }: TaskCalendarProps) => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setCurrentMonth(new Date())}
+            onClick={goToToday}
             className="font-medium"
           >
             Hoje
@@ -105,15 +116,15 @@ export const TaskCalendar = ({ onDayClick }: TaskCalendarProps) => {
         </div>
 
         <div className="flex items-center gap-3">
-          <Select value={viewMode} onValueChange={(value) => setViewMode(value as 'month' | 'week')}>
+          <Select value={viewMode} onValueChange={(value) => setViewMode(value as 'day' | 'week' | 'month')}>
             <SelectTrigger className="w-32">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="month">
+              <SelectItem value="day">
                 <div className="flex items-center gap-2">
-                  <Grid className="w-4 h-4" />
-                  Mês
+                  <CalendarIcon className="w-4 h-4" />
+                  Dia
                 </div>
               </SelectItem>
               <SelectItem value="week">
@@ -122,12 +133,18 @@ export const TaskCalendar = ({ onDayClick }: TaskCalendarProps) => {
                   Semana
                 </div>
               </SelectItem>
+              <SelectItem value="month">
+                <div className="flex items-center gap-2">
+                  <Grid className="w-4 h-4" />
+                  Mês
+                </div>
+              </SelectItem>
             </SelectContent>
           </Select>
 
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <CalendarIcon className="w-4 h-4" />
-            {currentBoard?.name}
+            {currentBoard?.name || 'Nenhum quadro selecionado'}
           </div>
         </div>
       </div>
@@ -163,7 +180,7 @@ export const TaskCalendar = ({ onDayClick }: TaskCalendarProps) => {
                 <div className="flex items-center justify-between mb-2">
                   <span className={`
                     text-sm font-medium
-                    ${isCurrentDay ? 'calendar-today text-white w-6 h-6 rounded-full flex items-center justify-center text-xs' : ''}
+                    ${isCurrentDay ? 'bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-xs' : ''}
                     ${isCurrentMonth ? 'text-foreground' : 'text-muted-foreground'}
                   `}>
                     {format(day, 'd')}
@@ -180,7 +197,7 @@ export const TaskCalendar = ({ onDayClick }: TaskCalendarProps) => {
                     <div
                       key={task.id}
                       className={`
-                        calendar-event text-xs px-2 py-1 rounded border
+                        text-xs px-2 py-1 rounded border
                         ${getTaskStatusColor(task.status)}
                         ${getPriorityIndicator(task.priority)}
                       `}
@@ -189,6 +206,7 @@ export const TaskCalendar = ({ onDayClick }: TaskCalendarProps) => {
                       <div className="flex items-center gap-1">
                         {task.priority && (
                           <div className={`w-1.5 h-1.5 rounded-full ${
+                            task.priority === 'critical' ? 'bg-red-600' :
                             task.priority === 'high' ? 'bg-red-500' :
                             task.priority === 'medium' ? 'bg-amber-500' :
                             'bg-green-500'
@@ -213,15 +231,15 @@ export const TaskCalendar = ({ onDayClick }: TaskCalendarProps) => {
       {/* Legend */}
       <div className="flex items-center justify-center gap-6 p-4 border-t bg-slate-50/30">
         <div className="flex items-center gap-2 text-xs">
-          <div className="w-3 h-3 rounded border calendar-event-todo"></div>
+          <div className="w-3 h-3 rounded border bg-slate-100 border-slate-200"></div>
           <span className="text-muted-foreground">A Fazer</span>
         </div>
         <div className="flex items-center gap-2 text-xs">
-          <div className="w-3 h-3 rounded border calendar-event-doing"></div>
+          <div className="w-3 h-3 rounded border bg-amber-100 border-amber-200"></div>
           <span className="text-muted-foreground">Fazendo</span>
         </div>
         <div className="flex items-center gap-2 text-xs">
-          <div className="w-3 h-3 rounded border calendar-event-done"></div>
+          <div className="w-3 h-3 rounded border bg-green-100 border-green-200"></div>
           <span className="text-muted-foreground">Concluído</span>
         </div>
       </div>

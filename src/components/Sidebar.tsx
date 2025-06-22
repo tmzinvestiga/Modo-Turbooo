@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Home, Calendar, BarChart3, Settings, LogOut, Zap, FileText } from 'lucide-react';
+import { Home, Calendar, BarChart3, Settings, LogOut, FileText } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -22,7 +22,11 @@ const menuItems = [
   { title: 'Configurações', icon: Settings, url: '/settings' },
 ];
 
-export const Sidebar = () => {
+interface SidebarProps {
+  onClose?: () => void;
+}
+
+export const Sidebar = ({ onClose }: SidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout, user } = useAuth();
@@ -33,15 +37,18 @@ export const Sidebar = () => {
     navigate('/');
   };
 
+  const handleNavigation = () => {
+    // Close sidebar on mobile after navigation
+    if (onClose && window.innerWidth < 1024) {
+      onClose();
+    }
+  };
+
   return (
-    <SidebarUI className="border-r border-sidebar-border bg-sidebar">
+    <SidebarUI className="border-r border-sidebar-border bg-sidebar w-64">
       <SidebarHeader className="p-6">
-        <div className="flex items-center space-x-2 animate-fade-in">
-          <Zap className="h-6 w-6 text-sidebar-primary" />
-          <h1 className="text-xl font-bold text-sidebar-foreground">MODO TURBO</h1>
-        </div>
         {user && (
-          <div className="mt-4 p-3 bg-sidebar-accent rounded-lg">
+          <div className="p-3 bg-sidebar-accent rounded-lg">
             <p className="text-sm text-sidebar-foreground/70">Bem-vindo,</p>
             <p className="font-medium text-sidebar-foreground">{user.name}</p>
           </div>
@@ -60,7 +67,11 @@ export const Sidebar = () => {
                     : ''
                 }`}
               >
-                <Link to={item.url} className="flex items-center gap-3 px-3 py-2">
+                <Link 
+                  to={item.url} 
+                  className="flex items-center gap-3 px-3 py-2"
+                  onClick={handleNavigation}
+                >
                   <item.icon className="w-5 h-5" />
                   <span>{item.title}</span>
                 </Link>
