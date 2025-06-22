@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useTaskStore } from '@/hooks/useTaskStore';
 import { useBoard } from '@/contexts/BoardContext';
@@ -7,6 +6,8 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Filter } fr
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Task } from '@/types/Task';
+import { WeeklyPlannerView } from '@/components/calendar/WeeklyPlannerView';
+import { DailyPlannerView } from '@/components/calendar/DailyPlannerView';
 import {
   Select,
   SelectContent,
@@ -19,10 +20,10 @@ interface TaskCalendarProps {
   onDayClick: (date: Date, tasks: Task[]) => void;
 }
 
-type ViewMode = 'today' | 'day' | 'week' | 'month';
+type ViewMode = 'month' | 'week' | 'day';
 
 export const TaskCalendar = ({ onDayClick }: TaskCalendarProps) => {
-  const { getTasksByBoard } = useTaskStore();
+  const { getTasksByBoard, updateTask, addTask } = useTaskStore();
   const { currentBoard } = useBoard();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('month');
@@ -49,14 +50,6 @@ export const TaskCalendar = ({ onDayClick }: TaskCalendarProps) => {
 
   const goToToday = () => {
     setCurrentDate(new Date());
-    setViewMode('today');
-  };
-
-  const handleViewModeChange = (mode: ViewMode) => {
-    setViewMode(mode);
-    if (mode === 'today') {
-      setCurrentDate(new Date());
-    }
   };
 
   const getTaskStatusColor = (status: string) => {
@@ -76,175 +69,6 @@ export const TaskCalendar = ({ onDayClick }: TaskCalendarProps) => {
       case 'low': return 'border-l-4 border-l-green-500';
       default: return '';
     }
-  };
-
-  const renderTodayView = () => {
-    const todayTasks = getTasksForDate(currentDate);
-    const todoTasks = todayTasks.filter(t => t.status === 'todo');
-    const doingTasks = todayTasks.filter(t => t.status === 'doing');
-    const doneTasks = todayTasks.filter(t => t.status === 'done');
-
-    return (
-      <div className="p-6 space-y-6">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-foreground">
-            {format(currentDate, 'EEEE, dd MMMM yyyy')}
-          </h2>
-          <p className="text-muted-foreground mt-1">
-            {todayTasks.length} tarefas agendadas para hoje
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-slate-500"></div>
-              <h3 className="font-semibold">A Fazer ({todoTasks.length})</h3>
-            </div>
-            <div className="space-y-2">
-              {todoTasks.map(task => (
-                <div key={task.id} className={`p-3 rounded border ${getTaskStatusColor(task.status)} ${getPriorityIndicator(task.priority)}`}>
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">{task.title}</span>
-                    {task.dueTime && (
-                      <Badge variant="outline" className="text-xs">
-                        <Clock className="w-3 h-3 mr-1" />
-                        {task.dueTime}
-                      </Badge>
-                    )}
-                  </div>
-                  {task.description && (
-                    <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
-                  )}
-                </div>
-              ))}
-              {todoTasks.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">Nenhuma tarefa para fazer</p>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-              <h3 className="font-semibold">Fazendo ({doingTasks.length})</h3>
-            </div>
-            <div className="space-y-2">
-              {doingTasks.map(task => (
-                <div key={task.id} className={`p-3 rounded border ${getTaskStatusColor(task.status)} ${getPriorityIndicator(task.priority)}`}>
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">{task.title}</span>
-                    {task.dueTime && (
-                      <Badge variant="outline" className="text-xs">
-                        <Clock className="w-3 h-3 mr-1" />
-                        {task.dueTime}
-                      </Badge>
-                    )}
-                  </div>
-                  {task.description && (
-                    <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
-                  )}
-                </div>
-              ))}
-              {doingTasks.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">Nenhuma tarefa em andamento</p>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-green-500"></div>
-              <h3 className="font-semibold">Concluído ({doneTasks.length})</h3>
-            </div>
-            <div className="space-y-2">
-              {doneTasks.map(task => (
-                <div key={task.id} className={`p-3 rounded border ${getTaskStatusColor(task.status)} ${getPriorityIndicator(task.priority)}`}>
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">{task.title}</span>
-                    {task.dueTime && (
-                      <Badge variant="outline" className="text-xs">
-                        <Clock className="w-3 h-3 mr-1" />
-                        {task.dueTime}
-                      </Badge>
-                    )}
-                  </div>
-                  {task.description && (
-                    <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
-                  )}
-                </div>
-              ))}
-              {doneTasks.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">Nenhuma tarefa concluída</p>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderWeekView = () => {
-    const weekStart = startOfWeek(currentDate);
-    const weekEnd = endOfWeek(currentDate);
-    const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
-
-    return (
-      <div className="p-6">
-        <div className="grid grid-cols-7 gap-4">
-          {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((day, index) => (
-            <div key={day} className="text-center text-sm font-medium text-muted-foreground py-2 border-b">
-              {day}
-            </div>
-          ))}
-          
-          {weekDays.map((day) => {
-            const dayTasks = getTasksForDate(day);
-            const isCurrentDay = isToday(day);
-            
-            return (
-              <div
-                key={day.toISOString()}
-                className={`min-h-[150px] p-3 border rounded-lg cursor-pointer transition-all hover:bg-accent/50 ${
-                  isCurrentDay ? 'bg-primary/5 border-primary/20' : 'bg-card'
-                }`}
-                onClick={() => onDayClick(day, dayTasks)}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className={`text-sm font-medium ${
-                    isCurrentDay ? 'bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-xs' : ''
-                  }`}>
-                    {format(day, 'd')}
-                  </span>
-                  {dayTasks.length > 0 && (
-                    <Badge variant="secondary" className="text-xs h-5 px-1.5">
-                      {dayTasks.length}
-                    </Badge>
-                  )}
-                </div>
-                
-                <div className="space-y-1">
-                  {dayTasks.slice(0, 3).map((task) => (
-                    <div
-                      key={task.id}
-                      className={`text-xs px-2 py-1 rounded border ${getTaskStatusColor(task.status)} ${getPriorityIndicator(task.priority)}`}
-                      title={`${task.title} - ${task.status}`}
-                    >
-                      <span className="truncate block">{task.title}</span>
-                    </div>
-                  ))}
-                  {dayTasks.length > 3 && (
-                    <div className="text-xs text-muted-foreground text-center py-1">
-                      +{dayTasks.length - 3} mais
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
   };
 
   const renderMonthView = () => {
@@ -337,8 +161,6 @@ export const TaskCalendar = ({ onDayClick }: TaskCalendarProps) => {
 
   const getViewTitle = () => {
     switch (viewMode) {
-      case 'today':
-        return format(currentDate, 'dd MMMM yyyy');
       case 'day':
         return format(currentDate, 'EEEE, dd MMMM yyyy');
       case 'week':
@@ -365,7 +187,7 @@ export const TaskCalendar = ({ onDayClick }: TaskCalendarProps) => {
               <ChevronLeft className="w-4 h-4" />
             </Button>
             
-            <h2 className="text-xl font-semibold text-foreground min-w-[200px] text-center">
+            <h2 className="text-xl font-semibold text-foreground min-w-[250px] text-center">
               {getViewTitle()}
             </h2>
             
@@ -378,18 +200,26 @@ export const TaskCalendar = ({ onDayClick }: TaskCalendarProps) => {
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={goToToday}
+            className="text-sm"
+          >
+            Hoje
+          </Button>
         </div>
 
         <div className="flex items-center gap-3">
-          <Select value={viewMode} onValueChange={handleViewModeChange}>
+          <Select value={viewMode} onValueChange={(value: ViewMode) => setViewMode(value)}>
             <SelectTrigger className="w-32">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="today">Hoje</SelectItem>
-              <SelectItem value="day">Dia</SelectItem>
-              <SelectItem value="week">Semana</SelectItem>
               <SelectItem value="month">Mês</SelectItem>
+              <SelectItem value="week">Semana</SelectItem>
+              <SelectItem value="day">Dia</SelectItem>
             </SelectContent>
           </Select>
 
@@ -401,10 +231,25 @@ export const TaskCalendar = ({ onDayClick }: TaskCalendarProps) => {
       </div>
 
       {/* Calendar Content */}
-      {viewMode === 'today' && renderTodayView()}
-      {viewMode === 'day' && renderTodayView()}
-      {viewMode === 'week' && renderWeekView()}
-      {viewMode === 'month' && renderMonthView()}
+      <div className="min-h-[600px]">
+        {viewMode === 'month' && renderMonthView()}
+        {viewMode === 'week' && (
+          <WeeklyPlannerView
+            currentDate={currentDate}
+            tasks={boardTasks}
+            onTaskUpdate={updateTask}
+            onDayClick={onDayClick}
+          />
+        )}
+        {viewMode === 'day' && (
+          <DailyPlannerView
+            currentDate={currentDate}
+            tasks={boardTasks}
+            onTaskUpdate={updateTask}
+            onAddTask={addTask}
+          />
+        )}
+      </div>
 
       {/* Legend */}
       <div className="flex items-center justify-center gap-6 p-4 border-t bg-slate-50/30">

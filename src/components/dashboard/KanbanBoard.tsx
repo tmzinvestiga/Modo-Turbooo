@@ -2,9 +2,10 @@
 import React, { useState } from 'react';
 import { TaskColumn } from '@/components/TaskColumn';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, GripVertical } from 'lucide-react';
 import { Task } from '@/types/Task';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useColumnDragDrop } from '@/hooks/useColumnDragDrop';
 
 interface Column {
   id: string;
@@ -19,6 +20,7 @@ interface KanbanBoardProps {
   onDeleteTask: (taskId: string) => void;
   onAddTask: (task: Omit<Task, 'id' | 'createdAt'>) => void;
   onReorderTasks: (draggedTaskId: string, targetTaskId: string, position: 'before' | 'after') => void;
+  onReorderColumns: (reorderedColumns: Column[]) => void;
   onQuickAddColumn: () => void;
 }
 
@@ -29,10 +31,21 @@ export const KanbanBoard = ({
   onDeleteTask,
   onAddTask,
   onReorderTasks,
+  onReorderColumns,
   onQuickAddColumn,
 }: KanbanBoardProps) => {
   const isMobile = useIsMobile();
   const [showAddColumnHover, setShowAddColumnHover] = useState(false);
+
+  const {
+    draggedColumnId,
+    dragOverColumnId,
+    handleColumnDragStart,
+    handleColumnDragOver,
+    handleColumnDragLeave,
+    handleColumnDrop,
+    resetDragState,
+  } = useColumnDragDrop(columns, onReorderColumns);
 
   return (
     <div 
@@ -44,8 +57,31 @@ export const KanbanBoard = ({
       onMouseEnter={() => setShowAddColumnHover(true)}
       onMouseLeave={() => setShowAddColumnHover(false)}
     >
-      {columns.map((column) => (
-        <div key={column.id} className={isMobile ? 'flex-shrink-0 w-80 snap-start' : ''}>
+      {columns.map((column, index) => (
+        <div 
+          key={column.id} 
+          className={`
+            ${isMobile ? 'flex-shrink-0 w-80 snap-start' : ''} 
+            transition-all duration-200
+            ${draggedColumnId === column.id ? 'opacity-50 scale-95' : ''}
+            ${dragOverColumnId === column.id ? 'scale-105 ring-2 ring-primary/30' : ''}
+          `}
+          draggable={!isMobile}
+          onDragStart={(e) => handleColumnDragStart(e, column.id)}
+          onDragOver={(e) => handleColumnDragOver(e, column.id)}
+          onDragLeave={handleColumnDragLeave}
+          onDrop={(e) => handleColumnDrop(e, column.id)}
+          onDragEnd={resetDragState}
+        >
+          {!isMobile && (
+            <div className="flex items-center justify-center mb-2 opacity-0 hover:opacity-100 transition-opacity">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded px-2 py-1 cursor-grab active:cursor-grabbing">
+                <GripVertical className="w-3 h-3" />
+                Arrastar coluna
+              </div>
+            </div>
+          )}
+          
           <TaskColumn
             title={column.title}
             status={column.status}

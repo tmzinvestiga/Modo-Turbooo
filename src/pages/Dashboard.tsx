@@ -8,6 +8,7 @@ import { KanbanBoard } from '@/components/dashboard/KanbanBoard';
 import { TaskEditModal } from '@/components/TaskEditModal';
 import { useTaskStore } from '@/hooks/useTaskStore';
 import { useBoard } from '@/contexts/BoardContext';
+import { useArchiving } from '@/hooks/useArchiving';
 import { Task } from '@/types/Task';
 import { pt } from '@/utils/localization';
 
@@ -31,6 +32,17 @@ export const Dashboard = () => {
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
   const [columns, setColumns] = useState<Column[]>(DEFAULT_COLUMNS);
 
+  // Initialize archiving functionality
+  const {
+    archiveSettings,
+    archivedTasks,
+    updateArchiveSettings,
+    archiveTasks,
+    performAutoArchive,
+    checkAutoArchiveTime,
+    restoreArchivedTask,
+  } = useArchiving(tasks, updateTask);
+
   // Filter tasks by current board
   const boardTasks = useMemo(() => {
     if (!currentBoard) return [];
@@ -41,6 +53,15 @@ export const Dashboard = () => {
   useEffect(() => {
     setFilteredTasks(boardTasks);
   }, [boardTasks]);
+
+  // Set up auto-archive checker (runs every minute)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      checkAutoArchiveTime();
+    }, 60000); // Check every minute
+
+    return () => clearInterval(interval);
+  }, [checkAutoArchiveTime]);
 
   const handleFilterChange = (filtered: Task[]) => {
     setFilteredTasks(filtered);
@@ -87,6 +108,30 @@ export const Dashboard = () => {
     });
   };
 
+  // Handle column reordering
+  const handleReorderColumns = (reorderedColumns: Column[]) => {
+    setColumns(reorderedColumns);
+    // Optionally save column order to localStorage or backend
+    localStorage.setItem(`column-order-${currentBoard?.id}`, JSON.stringify(reorderedColumns));
+  };
+
+  // Load column order when board changes
+  useEffect(() => {
+    if (currentBoard) {
+      const savedOrder = localStorage.getItem(`column-order-${currentBoard.id}`);
+      if (savedOrder) {
+        try {
+          const parsedOrder = JSON.parse(savedOrder);
+          setColumns(parsedOrder);
+        } catch {
+          setColumns(DEFAULT_COLUMNS);
+        }
+      } else {
+        setColumns(DEFAULT_COLUMNS);
+      }
+    }
+  }, [currentBoard]);
+
   const handleQuickAddColumn = () => {
     const columnTitle = prompt('Digite o título da nova coluna:');
     if (columnTitle && columnTitle.trim()) {
@@ -95,7 +140,9 @@ export const Dashboard = () => {
         title: columnTitle.trim(),
         status: 'todo', // Default status
       };
-      setColumns([...columns, newColumn]);
+      const newColumns = [...columns, newColumn];
+      setColumns(newColumns);
+      localStorage.setItem(`column-order-${currentBoard?.id}`, JSON.stringify(newColumns));
     }
   };
 
@@ -142,6 +189,7 @@ export const Dashboard = () => {
           onDeleteTask={deleteTask}
           onAddTask={handleAddTask}
           onReorderTasks={handleReorderTasks}
+          onReorderColumns={handleReorderColumns}
           onQuickAddColumn={handleQuickAddColumn}
         />
       </div>
